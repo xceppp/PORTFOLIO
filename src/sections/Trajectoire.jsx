@@ -53,6 +53,10 @@ export default function Trajectoire() {
     setActive(nextStart);
   };
 
+  const openCurrent = () => {
+    select(active, true);
+  };
+
   useEffect(() => {
     if (!open) return undefined;
     const onKey = (e) => {
@@ -83,10 +87,7 @@ export default function Trajectoire() {
     <section id={trajectoire.id} className="section trajectoire trajectoire--line">
       <div className="shell">
         <AnimatedContent>
-          <h2 className="section-title trajectoire__heading">
-            <span className="trajectoire__ouvrir">Ouvrir</span>
-            {trajectoire.title}
-          </h2>
+          <h2 className="section-title">{trajectoire.title}</h2>
         </AnimatedContent>
 
         <div className="line-map" aria-label="Ligne du parcours">
@@ -132,6 +133,18 @@ export default function Trajectoire() {
             disabled={!canNext}
             onClick={() => page(1)}
           />
+        </div>
+
+        <div className="line-map__actions">
+          <button
+            type="button"
+            className="line-map__ouvrir"
+            onClick={openCurrent}
+            aria-haspopup="dialog"
+            aria-expanded={open}
+          >
+            Ouvrir
+          </button>
         </div>
       </div>
 
