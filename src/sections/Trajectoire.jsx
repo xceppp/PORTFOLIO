@@ -7,6 +7,8 @@ export default function Trajectoire() {
   const stops = useMemo(() => [...trajectoire.stations], []);
   const [active, setActive] = useState(0);
   const [open, setOpen] = useState(false);
+  const [mapOpen, setMapOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const [windowStart, setWindowStart] = useState(0);
   const [visibleCount, setVisibleCount] = useState(5);
   const dialogRef = useRef(null);
@@ -15,9 +17,12 @@ export default function Trajectoire() {
   useEffect(() => {
     const update = () => {
       const w = window.innerWidth;
-      if (w <= 560) setVisibleCount(2);
+      const mobile = w <= 759;
+      setIsMobile(mobile);
+      if (mobile) setVisibleCount(2);
       else if (w <= 900) setVisibleCount(3);
       else setVisibleCount(5);
+      if (!mobile) setMapOpen(false);
     };
     update();
     window.addEventListener('resize', update);
@@ -46,7 +51,6 @@ export default function Trajectoire() {
     if (showPanel) setOpen(true);
   };
 
-  /** Jump a full visible page of the line — one click, next/prev segment. */
   const page = (dir) => {
     const nextStart = Math.max(0, Math.min(maxStart, windowStart + dir * shown));
     if (nextStart === windowStart) return;
@@ -55,83 +59,174 @@ export default function Trajectoire() {
   };
 
   useEffect(() => {
-    if (!open) return undefined;
+    if (!open && !mapOpen) return undefined;
     const onKey = (e) => {
-      if (e.key === 'Escape') setOpen(false);
-      if (e.key === 'ArrowRight') {
-        e.preventDefault();
-        select(active + 1, true);
+      if (e.key === 'Escape') {
+        setOpen(false);
+        setMapOpen(false);
       }
-      if (e.key === 'ArrowLeft') {
-        e.preventDefault();
-        select(active - 1, true);
+      if (open) {
+        if (e.key === 'ArrowRight') {
+          e.preventDefault();
+          select(active + 1, true);
+        }
+        if (e.key === 'ArrowLeft') {
+          e.preventDefault();
+          select(active - 1, true);
+        }
       }
     };
-    document.body.style.overflow = 'hidden';
+    document.body.style.overflow = open || mapOpen ? 'hidden' : '';
     window.addEventListener('keydown', onKey);
-    dialogRef.current?.focus();
+    if (open) dialogRef.current?.focus();
     return () => {
       document.body.style.overflow = '';
       window.removeEventListener('keydown', onKey);
     };
-  }, [open, active]);
+  }, [open, mapOpen, active]);
 
   const slice = stops.slice(windowStart, windowStart + shown);
   const canPrev = windowStart > 0;
   const canNext = windowStart < maxStart;
 
+  const openStopFromMap = (index) => {
+    setActive(index);
+    setMapOpen(false);
+    setOpen(true);
+  };
+
   return (
     <section id={trajectoire.id} className="section trajectoire trajectoire--line">
       <div className="shell">
         <AnimatedContent>
-          <h2 className="section-title trajectoire__title">{trajectoire.title}</h2>
+          <h2 className="section-title">{trajectoire.title}</h2>
         </AnimatedContent>
 
-        <div className="line-map" aria-label="Ligne du parcours">
-          <NavArrow
-            direction="prev"
-            className="line-map__arrow"
-            label="Segment précédent"
-            disabled={!canPrev}
-            onClick={() => page(-1)}
-          />
+        {isMobile ? (
+          <button
+            type="button"
+            className="line-map-launch"
+            onClick={() => setMapOpen(true)}
+            aria-haspopup="dialog"
+            aria-expanded={mapOpen}
+          >
+            <span className="line-map-launch__rail" aria-hidden="true" />
+            <span className="line-map-launch__pins" aria-hidden="true">
+              {stops.slice(0, 5).map((stop) => (
+                <span key={stop.years + stop.role} className="line-map-launch__pin" />
+              ))}
+            </span>
+            <span className="line-map-launch__copy">
+              <span className="line-map-launch__label">Carte du parcours</span>
+              <span className="line-map-launch__meta mono">
+                {stops.length} étapes · {stops[0]?.years} → {stops[stops.length - 1]?.years}
+              </span>
+            </span>
+            <span className="line-map-launch__cta">Ouvrir</span>
+          </button>
+        ) : (
+          <div className="line-map" aria-label="Ligne du parcours">
+            <NavArrow
+              direction="prev"
+              className="line-map__arrow"
+              label="Segment précédent"
+              disabled={!canPrev}
+              onClick={() => page(-1)}
+            />
 
-          <div className="line-map__stage">
-            <div className="line-map__rail" aria-hidden="true" />
-            <ol className="line-map__stops">
-              {slice.map((stop, localIndex) => {
-                const i = windowStart + localIndex;
-                const selected = open && i === active;
-                return (
-                  <li key={stop.years + stop.role} className="line-map__stop">
-                    <button
-                      type="button"
-                      className={`line-map__btn ${selected ? 'is-active' : ''} ${
-                        stop.current ? 'is-current' : ''
-                      }`}
-                      aria-haspopup="dialog"
-                      aria-expanded={selected}
-                      onClick={() => select(i, true)}
-                    >
-                      <span className="line-map__title">{stop.role}</span>
-                      <span className="line-map__pin" aria-hidden="true" />
-                      <span className="line-map__date mono">{stop.years}</span>
-                    </button>
-                  </li>
-                );
-              })}
+            <div className="line-map__stage">
+              <div className="line-map__rail" aria-hidden="true" />
+              <ol className="line-map__stops">
+                {slice.map((stop, localIndex) => {
+                  const i = windowStart + localIndex;
+                  const selected = open && i === active;
+                  return (
+                    <li key={stop.years + stop.role} className="line-map__stop">
+                      <button
+                        type="button"
+                        className={`line-map__btn ${selected ? 'is-active' : ''} ${
+                          stop.current ? 'is-current' : ''
+                        }`}
+                        aria-haspopup="dialog"
+                        aria-expanded={selected}
+                        onClick={() => select(i, true)}
+                      >
+                        <span className="line-map__title">{stop.role}</span>
+                        <span className="line-map__pin" aria-hidden="true" />
+                        <span className="line-map__date mono">{stop.years}</span>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ol>
+            </div>
+
+            <NavArrow
+              direction="next"
+              className="line-map__arrow"
+              label="Segment suivant"
+              disabled={!canNext}
+              onClick={() => page(1)}
+            />
+          </div>
+        )}
+      </div>
+
+      {mapOpen && (
+        <div
+          className="line-map__overlay line-map__overlay--sheet"
+          role="presentation"
+          onClick={() => setMapOpen(false)}
+        >
+          <div
+            className="line-map-sheet"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="line-map-sheet-title"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <header className="line-map-sheet__head">
+              <div>
+                <p className="line-map-sheet__kicker mono">Carte</p>
+                <h3 id="line-map-sheet-title" className="line-map-sheet__title">
+                  {trajectoire.title}
+                </h3>
+              </div>
+              <button
+                type="button"
+                className="line-map__close"
+                aria-label="Fermer"
+                onClick={() => setMapOpen(false)}
+              >
+                ×
+              </button>
+            </header>
+
+            <ol className="line-map-full" aria-label="Trajectoire complète">
+              {stops.map((stop, i) => (
+                <li key={stop.years + stop.role} className="line-map-full__item">
+                  <button
+                    type="button"
+                    className={`line-map-full__btn ${stop.current ? 'is-current' : ''}`}
+                    onClick={() => openStopFromMap(i)}
+                  >
+                    <span className="line-map-full__pin" aria-hidden="true" />
+                    <span className="line-map-full__body">
+                      <span className="line-map-full__date mono">{stop.years}</span>
+                      <span className="line-map-full__role">{stop.role}</span>
+                      <span className="line-map-full__place">
+                        {stop.place}
+                        <span aria-hidden="true"> · </span>
+                        {stop.institution}
+                      </span>
+                    </span>
+                  </button>
+                </li>
+              ))}
             </ol>
           </div>
-
-          <NavArrow
-            direction="next"
-            className="line-map__arrow"
-            label="Segment suivant"
-            disabled={!canNext}
-            onClick={() => page(1)}
-          />
         </div>
-      </div>
+      )}
 
       {open && (
         <div
@@ -175,6 +270,18 @@ export default function Trajectoire() {
               >
                 Précédent
               </button>
+              {isMobile && (
+                <button
+                  type="button"
+                  className="btn btn--secondary btn--sm"
+                  onClick={() => {
+                    setOpen(false);
+                    setMapOpen(true);
+                  }}
+                >
+                  Carte
+                </button>
+              )}
               <button
                 type="button"
                 className="btn btn--secondary btn--sm"
