@@ -1,12 +1,18 @@
-import { Suspense, lazy, useEffect, useState } from "react";
-import { StructureFlowCollection } from "@designcodeio/threeui";
+import { lazy, useEffect, useState } from "react";
 import BlurText from "./bits/BlurText";
 import DecryptedText from "./bits/DecryptedText";
 import CountUp from "./bits/CountUp";
 import ScrollVelocity from "./bits/ScrollVelocity";
 import Reveal from "./Reveal";
+import SceneMount from "./SceneMount";
+import useIsMobile from "./useIsMobile";
 import "./styles.css";
 
+const StructureFlowCollection = lazy(() =>
+  import("@designcodeio/threeui/components/StructureFlowCollection").then((m) => ({
+    default: m.StructureFlowCollection,
+  }))
+);
 const ThreeDPaper = lazy(() =>
   import("./threeui-src/shaders/3d-paper/ThreeDPaper.jsx").then((m) => ({ default: m.ThreeDPaper }))
 );
@@ -63,16 +69,28 @@ function ArticleCard({ pub, dup = false }) {
 export default function App() {
   const [open, setOpen] = useState(false);
   const [solidNav, setSolidNav] = useState(false);
+  const mobile = useIsMobile();
+
+  useEffect(() => {
+    document.body.classList.toggle("nav-open", open);
+    return () => document.body.classList.remove("nav-open");
+  }, [open]);
 
   useEffect(() => {
     const year = document.getElementById("year");
     if (year) year.textContent = String(new Date().getFullYear());
 
     const bar = document.querySelector(".progress");
+    let ticking = false;
     const onScroll = () => {
-      const h = document.documentElement.scrollHeight - innerHeight;
-      if (bar) bar.style.transform = `scaleX(${h > 0 ? scrollY / h : 0})`;
-      setSolidNav(scrollY > Math.min(innerHeight * 0.55, 420));
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        const h = document.documentElement.scrollHeight - innerHeight;
+        if (bar) bar.style.transform = `scaleX(${h > 0 ? scrollY / h : 0})`;
+        setSolidNav(scrollY > Math.min(innerHeight * 0.55, 420));
+        ticking = false;
+      });
     };
     addEventListener("scroll", onScroll, { passive: true });
     onScroll();
@@ -105,9 +123,9 @@ export default function App() {
       <div className="progress" aria-hidden="true" />
       <a className="skip" href="#contenu">Aller au contenu</a>
 
-      <header className={`topbar${solidNav ? " solid" : ""}`}>
+      <header className={`topbar${solidNav || open ? " solid" : ""}`}>
         <nav className="nav wrap" aria-label="Navigation principale">
-          <a className="brand" href="#accueil">
+          <a className="brand" href="#accueil" onClick={() => setOpen(false)}>
             <span className="mark">ZC</span>
             <span>
               ZAKARIA CHALH
@@ -120,7 +138,7 @@ export default function App() {
             aria-expanded={open}
             onClick={() => setOpen((v) => !v)}
           >
-            ☰
+            {open ? "✕" : "☰"}
           </button>
           <div className={open ? "links open" : "links"} onClick={() => setOpen(false)}>
             <a href="#signal">Manifeste</a>
@@ -132,47 +150,67 @@ export default function App() {
           </div>
         </nav>
       </header>
+      {open ? (
+        <button type="button" className="nav-scrim" aria-label="Fermer le menu" onClick={() => setOpen(false)} />
+      ) : null}
 
       <main id="contenu">
         <section className="hero" id="accueil">
           <div className="shader-frame hero-flow" aria-hidden="true">
-            <StructureFlowCollection
-              variant="topology-field"
-              hue={0}
-              saturation={1.0}
-              brightness={1.0}
-            />
+            {!mobile ? (
+              <SceneMount>
+                <StructureFlowCollection
+                  variant="topology-field"
+                  hue={0}
+                  saturation={1.0}
+                  brightness={1.0}
+                />
+              </SceneMount>
+            ) : null}
           </div>
           <div className="hero-shade" aria-hidden="true" />
           <div className="hero-inner">
             <div className="hero-kicker">
-              <DecryptedText
-                text="Professeur d’enseignement supérieur"
-                animateOn="view"
-                sequential
-                speed={28}
-                characters="ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789·"
-              />
+              {mobile ? (
+                <span>Professeur d’enseignement supérieur</span>
+              ) : (
+                <DecryptedText
+                  text="Professeur d’enseignement supérieur"
+                  animateOn="view"
+                  sequential
+                  speed={28}
+                  characters="ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789·"
+                />
+              )}
             </div>
             <h1 className="hero-name">
-              <BlurText
-                startOnMount
-                text="Zakaria"
-                className="first"
-                animateBy="letters"
-                delay={36}
-                direction="bottom"
-                stepDuration={0.28}
-              />
-              <BlurText
-                startOnMount
-                text="CHALH"
-                className="last"
-                animateBy="letters"
-                delay={28}
-                direction="bottom"
-                stepDuration={0.28}
-              />
+              {mobile ? (
+                <>
+                  <span className="first">Zakaria</span>
+                  <span className="last">CHALH</span>
+                </>
+              ) : (
+                <>
+                  <BlurText
+                    startOnMount
+                    text="Zakaria"
+                    className="first"
+                    animateBy="letters"
+                    delay={36}
+                    direction="bottom"
+                    stepDuration={0.28}
+                  />
+                  <BlurText
+                    startOnMount
+                    text="CHALH"
+                    className="last"
+                    animateBy="letters"
+                    delay={28}
+                    direction="bottom"
+                    stepDuration={0.28}
+                  />
+                </>
+              )}
             </h1>
             <p className="hero-line">Directeur de l’École Supérieure de Technologie de Meknès</p>
             <p className="hero-sub">
@@ -229,15 +267,21 @@ export default function App() {
           </article>
         </Reveal>
 
-        <div className="belt" aria-hidden="true">
-          <ScrollVelocity
-            texts={[
-              "GÉNIE INDUSTRIEL   ·   AUTOMATIQUE   ·   INFORMATIQUE INDUSTRIELLE   ·   SYSTÈMES 2D   ·   MÉCATRONIQUE   ·   INDUSTRIE 4.0   ·   GOUVERNANCE   ·   EST MEKNÈS   ·   "
-            ]}
-            velocity={40}
-            numCopies={4}
-          />
-        </div>
+        {!mobile ? (
+          <div className="belt" aria-hidden="true">
+            <ScrollVelocity
+              texts={[
+                "GÉNIE INDUSTRIEL   ·   AUTOMATIQUE   ·   INFORMATIQUE INDUSTRIELLE   ·   SYSTÈMES 2D   ·   MÉCATRONIQUE   ·   INDUSTRIE 4.0   ·   GOUVERNANCE   ·   EST MEKNÈS   ·   "
+              ]}
+              velocity={40}
+              numCopies={4}
+            />
+          </div>
+        ) : (
+          <div className="belt belt--static" aria-hidden="true">
+            <p>GÉNIE INDUSTRIEL · AUTOMATIQUE · SYSTÈMES 2D · INDUSTRIE 4.0 · EST MEKNÈS</p>
+          </div>
+        )}
 
         <section className="chapter" id="trajectoire">
           <div className="wrap">
@@ -246,7 +290,9 @@ export default function App() {
               <div>
                 <h2>Une trajectoire, de la recherche à la direction.</h2>
                 <p className="prose">
-                  Faites défiler horizontalement la ligne de parcours — comme une chaîne de postes dans un système industriel.
+                  {mobile
+                    ? "Glissez horizontalement la ligne de parcours pour avancer d’un poste à l’autre."
+                    : "Faites défiler horizontalement la ligne de parcours — comme une chaîne de postes dans un système industriel."}
                 </p>
               </div>
             </Reveal>
@@ -273,9 +319,9 @@ export default function App() {
                 </p>
               </div>
               <div className="shader-frame scene-stage scene-stage--paper">
-                <Suspense fallback={<div className="scene-fallback" aria-hidden="true" />}>
+                <SceneMount label="Activer le certificat 3D" desktopOnly>
                   <ThreeDPaper variant="original" />
-                </Suspense>
+                </SceneMount>
               </div>
             </Reveal>
           </div>
@@ -420,19 +466,21 @@ export default function App() {
                 </p>
               </div>
               <div className="shader-frame scene-stage scene-stage--ashen">
-                <Suspense fallback={<div className="scene-fallback" aria-hidden="true" />}>
+                <SceneMount label="Activer l’étagère 3D" desktopOnly>
                   <AshenPress />
-                </Suspense>
+                </SceneMount>
               </div>
             </Reveal>
-            <div className="live"><i /> LIGNE D’ARTICLES — SURVOLEZ POUR PAUSER</div>
+            {!mobile ? <div className="live"><i /> LIGNE D’ARTICLES — SURVOLEZ POUR PAUSER</div> : null}
           </div>
-          <div className="conveyor" aria-hidden="true">
-            <div className="conveyor-track">
-              <div className="set">{pubs.map((p) => <ArticleCard key={p.href} pub={p} />)}</div>
-              <div className="set">{pubs.map((p) => <ArticleCard key={`${p.href}-d`} pub={p} dup />)}</div>
+          {!mobile ? (
+            <div className="conveyor" aria-hidden="true">
+              <div className="conveyor-track">
+                <div className="set">{pubs.map((p) => <ArticleCard key={p.href} pub={p} />)}</div>
+                <div className="set">{pubs.map((p) => <ArticleCard key={`${p.href}-d`} pub={p} dup />)}</div>
+              </div>
             </div>
-          </div>
+          ) : null}
           <div className="wrap">
             <Reveal delay={100}>
               <div className="pub-rows">
@@ -516,9 +564,9 @@ export default function App() {
                 </p>
               </div>
               <div className="shader-frame scene-stage scene-stage--shelf">
-                <Suspense fallback={<div className="scene-fallback" aria-hidden="true" />}>
+                <SceneMount label="Activer la collection 3D" desktopOnly>
                   <BookshelfScene />
-                </Suspense>
+                </SceneMount>
               </div>
             </Reveal>
             <Reveal className="gov" delay={120}>
