@@ -56,67 +56,36 @@ function useIsMobile(maxWidth = 759) {
   return mobile;
 }
 
-function NameLines({
-  words,
-  stacked,
-  glowId,
-  letterCount,
-}) {
+function NameSvg({ text, words, stacked, glowId }) {
   let letterIndex = 0;
   const viewBox = stacked ? '0 0 1100 420' : '0 0 1600 210';
   const fontSize = stacked ? 168 : 178;
-  const lineYs = stacked ? ['38%', '86%'] : ['74%'];
   const returnLine = stacked
     ? { x1: 920, y1: 340, x2: 180, y2: 95 }
     : { x1: 1385, y1: 108, x2: 215, y2: 108 };
 
-  const renderFill = () =>
-    words.map((word, wi) => (
-      <text
-        key={`fill-line-${wi}`}
-        className="hero__name-row"
-        x="50%"
-        y={stacked ? lineYs[wi] : lineYs[0]}
-        textAnchor="middle"
-        style={{ fontSize: `${fontSize}px` }}
-        aria-hidden="true"
+  const strokeLetter = (ch, key) => {
+    if (ch === ' ') {
+      return <tspan key={key}>{'\u00A0'}</tspan>;
+    }
+    const order = letterIndex;
+    letterIndex += 1;
+    return (
+      <tspan
+        key={key}
+        className="hero__name-stroke"
+        style={{ '--letter-index': order }}
       >
-        {[...word].map((ch, i) => (
-          <tspan key={`fill-${wi}-${i}`} className="hero__name-fill">
-            {ch}
-          </tspan>
-        ))}
-      </text>
-    ));
+        {ch}
+      </tspan>
+    );
+  };
 
-  const renderStroke = () =>
-    words.map((word, wi) => (
-      <text
-        key={`stroke-line-${wi}`}
-        className="hero__name-row"
-        x="50%"
-        y={stacked ? lineYs[wi] : lineYs[0]}
-        textAnchor="middle"
-        fill="none"
-        filter={`url(#${glowId})`}
-        style={{ fontSize: `${fontSize}px` }}
-        aria-hidden="true"
-      >
-        {[...word].map((ch, i) => {
-          const order = letterIndex;
-          letterIndex += 1;
-          return (
-            <tspan
-              key={`stroke-${wi}-${i}`}
-              className="hero__name-stroke"
-              style={{ '--letter-index': order }}
-            >
-              {ch}
-            </tspan>
-          );
-        })}
-      </text>
-    ));
+  const fillLetter = (ch, key) => (
+    <tspan key={key} className="hero__name-fill">
+      {ch === ' ' ? '\u00A0' : ch}
+    </tspan>
+  );
 
   return (
     <svg
@@ -152,8 +121,63 @@ function NameLines({
         </linearGradient>
       </defs>
 
-      {renderFill()}
-      {renderStroke()}
+      {stacked ? (
+        <>
+          {words.map((word, wi) => (
+            <text
+              key={`fill-${wi}`}
+              className="hero__name-row"
+              x="50%"
+              y={wi === 0 ? '38%' : '86%'}
+              textAnchor="middle"
+              style={{ fontSize: `${fontSize}px` }}
+              aria-hidden="true"
+            >
+              {[...word].map((ch, i) => fillLetter(ch, `f-${wi}-${i}`))}
+            </text>
+          ))}
+          {words.map((word, wi) => (
+            <text
+              key={`stroke-${wi}`}
+              className="hero__name-row"
+              x="50%"
+              y={wi === 0 ? '38%' : '86%'}
+              textAnchor="middle"
+              fill="none"
+              filter={`url(#${glowId})`}
+              style={{ fontSize: `${fontSize}px` }}
+              aria-hidden="true"
+            >
+              {[...word].map((ch, i) => strokeLetter(ch, `s-${wi}-${i}`))}
+            </text>
+          ))}
+        </>
+      ) : (
+        <>
+          <text
+            className="hero__name-row"
+            x="50%"
+            y="74%"
+            textAnchor="middle"
+            style={{ fontSize: `${fontSize}px` }}
+            aria-hidden="true"
+          >
+            {[...text].map((ch, i) => fillLetter(ch, `f-${i}`))}
+          </text>
+          <text
+            className="hero__name-row"
+            x="50%"
+            y="74%"
+            textAnchor="middle"
+            fill="none"
+            filter={`url(#${glowId})`}
+            style={{ fontSize: `${fontSize}px` }}
+            aria-hidden="true"
+          >
+            {[...text].map((ch, i) => strokeLetter(ch, `s-${i}`))}
+          </text>
+        </>
+      )}
 
       <g
         className="hero__name-return"
@@ -252,12 +276,7 @@ export default function HeroName({ text }) {
         '--return-step': `${RETURN_STEP_MS}ms`,
       }}
     >
-      <NameLines
-        words={words}
-        stacked={stacked}
-        glowId={glowId}
-        letterCount={letterCount}
-      />
+      <NameSvg text={text} words={words} stacked={stacked} glowId={glowId} />
     </h1>
   );
 }
