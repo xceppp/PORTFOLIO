@@ -18,9 +18,15 @@ function smoothScrollTo(y, duration = SCROLL_DOWN_MS) {
 
   const prevBehavior = document.documentElement.style.scrollBehavior;
   document.documentElement.style.scrollBehavior = 'auto';
+  document.documentElement.dataset.autoScrolling = '1';
 
   let raf = 0;
   const start = performance.now();
+
+  const finish = () => {
+    document.documentElement.style.scrollBehavior = prevBehavior;
+    delete document.documentElement.dataset.autoScrolling;
+  };
 
   const tick = (now) => {
     const t = Math.min(1, (now - start) / duration);
@@ -29,15 +35,23 @@ function smoothScrollTo(y, duration = SCROLL_DOWN_MS) {
     if (t < 1) {
       raf = requestAnimationFrame(tick);
     } else {
-      document.documentElement.style.scrollBehavior = prevBehavior;
+      finish();
     }
   };
 
   raf = requestAnimationFrame(tick);
   return () => {
     cancelAnimationFrame(raf);
-    document.documentElement.style.scrollBehavior = prevBehavior;
+    finish();
   };
+}
+
+/** Land on the section so its content is in view — never past its end. */
+function sectionEntryY(el) {
+  const top = el.offsetTop - NAV_OFFSET;
+  const end = el.offsetTop + el.offsetHeight;
+  const maxY = Math.max(0, end - window.innerHeight);
+  return Math.max(0, Math.min(top, maxY));
 }
 
 function useIsMobile(maxWidth = 759) {
@@ -219,11 +233,7 @@ export default function HeroName({ text }) {
       scrolledRef.current = true;
       const target = document.getElementById('manifeste');
       if (!target) return;
-      const top =
-        target.getBoundingClientRect().top +
-        (window.scrollY || window.pageYOffset) -
-        NAV_OFFSET;
-      cancelScroll = smoothScrollTo(Math.max(0, top), SCROLL_DOWN_MS);
+      cancelScroll = smoothScrollTo(sectionEntryY(target), SCROLL_DOWN_MS);
     }, HERO_HOLD_MS);
 
     return () => {
