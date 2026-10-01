@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="1000" viewBox="0 0 800 1000" role="img">
+  <rect width="800" height="1000" fill="#1c1f23"/>
+  <rect x="1" y="1" width="798" height="998" fill="none" stroke="rgba(236,236,234,0.09)"/>
+  <circle cx="400" cy="360" r="120" fill="#2a2e33"/>
+  <path d="M180 860c40-160 140-240 220-240s180 80 220 240" fill="#2a2e33"/>
+  <text x="400" y="920" text-anchor="middle" fill="#6e7277" font-family="Geist, sans-serif" font-size="22">Portrait à fournir</text>
+</svg>
