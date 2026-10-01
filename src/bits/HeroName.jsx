@@ -3,6 +3,42 @@ import { usePrefersReducedMotion } from '../hooks/useTheme';
 
 const LETTER_STEP_MS = 1150;
 const RETURN_STEP_MS = 1850;
+const HERO_HOLD_MS = 3500;
+const SCROLL_DOWN_MS = 1600;
+const NAV_OFFSET = 60;
+
+function easeInOutCubic(t) {
+  return t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
+}
+
+function smoothScrollTo(y, duration = SCROLL_DOWN_MS) {
+  const startY = window.scrollY || window.pageYOffset;
+  const delta = y - startY;
+  if (Math.abs(delta) < 2) return () => {};
+
+  const prevBehavior = document.documentElement.style.scrollBehavior;
+  document.documentElement.style.scrollBehavior = 'auto';
+
+  let raf = 0;
+  const start = performance.now();
+
+  const tick = (now) => {
+    const t = Math.min(1, (now - start) / duration);
+    const eased = easeInOutCubic(t);
+    window.scrollTo(0, startY + delta * eased);
+    if (t < 1) {
+      raf = requestAnimationFrame(tick);
+    } else {
+      document.documentElement.style.scrollBehavior = prevBehavior;
+    }
+  };
+
+  raf = requestAnimationFrame(tick);
+  return () => {
+    cancelAnimationFrame(raf);
+    document.documentElement.style.scrollBehavior = prevBehavior;
+  };
+}
 
 function useIsMobile(maxWidth = 759) {
   const [mobile, setMobile] = useState(() =>
@@ -152,16 +188,24 @@ export default function HeroName({ text }) {
 
   useEffect(() => {
     if (reduced || scrolledRef.current) return undefined;
-    /* Brief beat on the hero, then enter Manifeste */
+    let cancelScroll = () => {};
+
     const id = window.setTimeout(() => {
       if (scrolledRef.current) return;
       scrolledRef.current = true;
-      document.getElementById('manifeste')?.scrollIntoView({
-        behavior: 'smooth',
-        block: 'start',
-      });
-    }, 3500);
-    return () => window.clearTimeout(id);
+      const target = document.getElementById('manifeste');
+      if (!target) return;
+      const top =
+        target.getBoundingClientRect().top +
+        (window.scrollY || window.pageYOffset) -
+        NAV_OFFSET;
+      cancelScroll = smoothScrollTo(Math.max(0, top), SCROLL_DOWN_MS);
+    }, HERO_HOLD_MS);
+
+    return () => {
+      window.clearTimeout(id);
+      cancelScroll();
+    };
   }, [reduced]);
 
   useEffect(() => {
