@@ -1,32 +1,38 @@
 import { useEffect, useRef, useState } from 'react';
-import { a11y, contacts, footer, identity, nav } from '../content';
+import { a11y, contacts, identity, nav } from '../content';
 
 function ExternalHint() {
   return <span className="visually-hidden"> {a11y.newTab}</span>;
 }
 
-function ThemeToggle({ preference, setPreference, resolved, className = '' }) {
+function ThemeToggle({ preference, setPreference, resolved }) {
   const active = preference === 'system' ? resolved : preference;
+  const isDark = active === 'dark';
 
   return (
-    <div className={`theme-switch theme-switch--nav ${className}`.trim()} role="group" aria-label="Thème">
-      <button
-        type="button"
-        className={active === 'light' ? 'is-active' : ''}
-        aria-pressed={active === 'light'}
-        onClick={() => setPreference('light')}
-      >
-        {footer.theme.light}
-      </button>
-      <button
-        type="button"
-        className={active === 'dark' ? 'is-active' : ''}
-        aria-pressed={active === 'dark'}
-        onClick={() => setPreference('dark')}
-      >
-        {footer.theme.dark}
-      </button>
-    </div>
+    <button
+      type="button"
+      className={`theme-orb ${isDark ? 'is-dark' : 'is-light'}`}
+      aria-label={isDark ? 'Passer en mode clair' : 'Passer en mode sombre'}
+      title={isDark ? 'Mode clair' : 'Mode sombre'}
+      onClick={() => setPreference(isDark ? 'light' : 'dark')}
+    >
+      {isDark ? (
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+          <path
+            fill="currentColor"
+            d="M12.2 2.1a9.9 9.9 0 0 0 0 19.8 9.9 9.9 0 0 0 8.7-5.2 8.2 8.2 0 1 1-8.7-14.6Z"
+          />
+        </svg>
+      ) : (
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+          <circle cx="12" cy="12" r="4.2" fill="currentColor" />
+          <g stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
+            <path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.2 5.2l1.5 1.5M17.3 17.3l1.5 1.5M18.8 5.2l-1.5 1.5M6.7 17.3l-1.5 1.5" />
+          </g>
+        </svg>
+      )}
+    </button>
   );
 }
 
@@ -87,7 +93,7 @@ export default function Nav({ preference, setPreference, resolved }) {
             href="#accueil"
             className="wordmark"
             onContextMenu={onWordmarkContext}
-            aria-label={`${identity.wordmark} — accueil`}
+            aria-label={`${identity.wordmark} — Accueil`}
           >
             {identity.wordmark}
           </a>
@@ -109,7 +115,7 @@ export default function Nav({ preference, setPreference, resolved }) {
               resolved={resolved}
             />
             <a
-              className="btn btn--secondary btn--sm"
+              className="btn btn--secondary btn--sm site-nav__orcid"
               href={contacts.orcid}
               target="_blank"
               rel="noopener noreferrer"
@@ -133,6 +139,17 @@ export default function Nav({ preference, setPreference, resolved }) {
       </header>
 
       <div id="mobile-menu" className={`mobile-menu ${mobileOpen ? 'is-open' : ''}`} hidden={!mobileOpen}>
+        <div className="mobile-menu__top">
+          <p className="mobile-menu__brand">{identity.wordmark}</p>
+          <button
+            type="button"
+            className="mobile-menu__close"
+            aria-label="Fermer le menu"
+            onClick={() => setMobileOpen(false)}
+          >
+            ×
+          </button>
+        </div>
         <div className="mobile-menu__inner">
           <ul className="mobile-menu__links">
             {nav.links.map((link) => (

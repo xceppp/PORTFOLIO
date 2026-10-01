@@ -23,10 +23,10 @@ export default function App() {
       <a className="skip-link" href="#contenu">
         {a11y.skip}
       </a>
-      <AnnouncementBar />
       <Nav preference={preference} setPreference={setPreference} resolved={resolved} />
       <main id="contenu">
         <Hero />
+        <AnnouncementBar />
         <Manifeste />
         <Trajectoire />
         <Etablissements />
@@ -37,7 +37,7 @@ export default function App() {
         <Pilotage />
         <Contact />
       </main>
-      <Footer preference={preference} setPreference={setPreference} />
+      <Footer preference={preference} setPreference={setPreference} resolved={resolved} />
     </>
   );
 }

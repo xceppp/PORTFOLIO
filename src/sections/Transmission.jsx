@@ -115,7 +115,6 @@ export default function Transmission() {
         <div className="theses-list">
           <div className="theses-list__head">
             <h3>{theses.title}</h3>
-            <p className="mono theses-list__range">2018 → 2024 · plus récent en tête</p>
           </div>
 
           <ul className="theses-list__items">

@@ -26,7 +26,6 @@ export default function Hero() {
       </div>
 
       <div className="hero__content shell">
-        <p className="hero__eyebrow">{hero.eyebrow}</p>
         <HeroName text={hero.name} />
         <p className="hero__title">{hero.title}</p>
 

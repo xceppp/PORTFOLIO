@@ -107,7 +107,7 @@ export const establishments = [
     logos: ['/logos/umi-mark.png', '/logos/est-mark.png'],
     wide: true,
   },
-  { id: 'ensa', name: 'ENSA Fès', logo: '/logos/ensa.png', tone: 'plate' },
+  { id: 'ensa', name: 'ENSA Fès', logo: '/logos/ensa.png' },
   { id: 'usmba', name: 'Université Sidi Mohamed Ben Abdellah', logo: '/logos/usmba.png' },
   { id: 'lisa', name: 'Laboratoire LISA', logo: '/logos/lisa.png' },
   { id: 'psa', name: 'PSA Paris-Saclay', logo: '/logos/psa.svg' },
@@ -306,7 +306,7 @@ export const transmission = {
     ],
   },
   theses: {
-    title: 'Thèses soutenues',
+    title: 'Thèses Soutenues',
     rows: [
       {
         year: '2024',
@@ -535,7 +535,7 @@ export const footer = {
       ],
     },
     {
-      title: 'Profils scientifiques',
+      title: 'Profils Scientifiques',
       links: [
         { label: 'ORCID', href: 'https://orcid.org/0000-0003-0838-4152', external: true },
         {

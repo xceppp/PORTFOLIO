@@ -63,7 +63,6 @@ export default function Production() {
             <p className="mono">
               {String(index + 1).padStart(2, '0')} / {String(publications.length).padStart(2, '0')}
             </p>
-            <p className="paper-deck__hint">Glisser ou utiliser les flèches</p>
           </div>
 
           <div className="paper-deck__row">
