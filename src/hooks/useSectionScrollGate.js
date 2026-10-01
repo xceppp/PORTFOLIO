@@ -6,103 +6,216 @@ function getSections() {
   return Array.from(document.querySelectorAll('#contenu > section'));
 }
 
-function sectionLimit(section) {
-  return Math.max(0, section.offsetTop + section.offsetHeight - window.innerHeight);
+function sectionTop(section) {
+  return Math.max(0, section.offsetTop - NAV_OFFSET);
 }
 
-function currentSectionIndex(scrollY) {
-  const sections = getSections();
-  let index = 0;
-  for (let i = 0; i < sections.length; i += 1) {
-    if (sections[i].offsetTop - NAV_OFFSET <= scrollY + 48) index = i;
-  }
-  return index;
-}
-
-function isFullyShown(section, scrollY) {
+/** Furthest scrollY allowed inside this section before it is cleared. */
+function sectionCap(section) {
+  const top = sectionTop(section);
   const bottom = section.offsetTop + section.offsetHeight;
-  return scrollY + window.innerHeight >= bottom - 6;
+  const vh = window.innerHeight;
+  // Short section: pin at its start until cleared
+  if (bottom - section.offsetTop <= vh - NAV_OFFSET + 12) {
+    return top;
+  }
+  // Tall section: may scroll until its bottom sits on the viewport bottom
+  return Math.max(top, bottom - vh);
+}
+
+function sectionCleared(section, scrollY) {
+  const top = sectionTop(section);
+  const bottom = section.offsetTop + section.offsetHeight;
+  const vh = window.innerHeight;
+  if (bottom - section.offsetTop <= vh - NAV_OFFSET + 12) {
+    // Whole section fits — cleared once we have landed on it
+    return scrollY + 24 >= top && scrollY + vh >= bottom - 8;
+  }
+  return scrollY + vh >= bottom - 8;
+}
+
+function indexForId(id) {
+  return getSections().findIndex((el) => el.id === id);
 }
 
 /**
- * Block advancing to the next section until the current section’s
- * full content has been brought into view.
+ * Hard gate: cannot enter the next section until the current one
+ * has been fully shown (short: landed on it; tall: scrolled to its end).
  */
 export default function useSectionScrollGate() {
   useEffect(() => {
-    let touching = false;
+    let gateIndex = 0;
     let touchStartY = 0;
+    let ticking = false;
+    let leaveArmed = false;
 
-    const clampIfNeeded = () => {
+    const maxAllowedY = () => {
+      const sections = getSections();
+      if (!sections.length) return Number.POSITIVE_INFINITY;
+      if (gateIndex >= sections.length) {
+        return document.documentElement.scrollHeight;
+      }
+      return sectionCap(sections[gateIndex]);
+    };
+
+    const applyGate = () => {
       if (document.documentElement.dataset.autoScrolling === '1') return;
       const y = window.scrollY || window.pageYOffset;
       const sections = getSections();
       if (!sections.length) return;
-      const index = currentSectionIndex(y);
-      const section = sections[index];
-      if (!section || isFullyShown(section, y)) return;
-      const limit = sectionLimit(section);
-      if (y > limit + 1) {
-        window.scrollTo(0, limit);
+
+      // If user scrolled up into an earlier section, pull the gate back
+      for (let i = 0; i < sections.length; i += 1) {
+        if (sectionTop(sections[i]) <= y + 40) {
+          if (i < gateIndex && !sectionCleared(sections[i], y)) {
+            gateIndex = i;
+          }
+        }
       }
+
+      const cap = maxAllowedY();
+      if (y > cap + 0.5) {
+        window.scrollTo(0, cap);
+      }
+    };
+
+    const tryAdvance = (y) => {
+      const sections = getSections();
+      if (!sections.length || gateIndex >= sections.length) return false;
+      const current = sections[gateIndex];
+      const cap = sectionCap(current);
+      if (y + 1 < cap) return false;
+      if (!sectionCleared(current, Math.max(y, cap))) return false;
+      gateIndex = Math.min(gateIndex + 1, sections.length);
+      return true;
     };
 
     const onWheel = (e) => {
       if (document.documentElement.dataset.autoScrolling === '1') return;
-      if (e.deltaY <= 0) return;
+      if (e.deltaY <= 0) {
+        leaveArmed = false;
+        applyGate();
+        return;
+      }
+
       const y = window.scrollY || window.pageYOffset;
-      const sections = getSections();
-      if (!sections.length) return;
-      const index = currentSectionIndex(y);
-      const section = sections[index];
-      if (!section || isFullyShown(section, y)) return;
-      const limit = sectionLimit(section);
-      if (y + e.deltaY > limit) {
+      const cap = maxAllowedY();
+
+      if (y >= cap - 1) {
+        // Pin at section end; require a second scroll to enter the next one
         e.preventDefault();
-        if (Math.abs(y - limit) > 1) window.scrollTo(0, limit);
+        window.scrollTo(0, cap);
+        if (leaveArmed) {
+          tryAdvance(cap);
+          leaveArmed = false;
+        } else {
+          leaveArmed = true;
+        }
+        return;
+      }
+
+      leaveArmed = false;
+      if (y + e.deltaY > cap) {
+        e.preventDefault();
+        window.scrollTo(0, cap);
+        leaveArmed = true;
       }
     };
 
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        ticking = false;
+        applyGate();
+      });
+    };
+
     const onTouchStart = (e) => {
-      touching = true;
       touchStartY = e.touches[0]?.clientY ?? 0;
     };
 
     const onTouchMove = (e) => {
-      if (!touching || document.documentElement.dataset.autoScrolling === '1') return;
+      if (document.documentElement.dataset.autoScrolling === '1') return;
       const currentY = e.touches[0]?.clientY ?? 0;
-      const goingDown = currentY < touchStartY - 2;
+      const goingDown = currentY < touchStartY - 4;
       if (!goingDown) return;
+
       const y = window.scrollY || window.pageYOffset;
-      const sections = getSections();
-      if (!sections.length) return;
-      const index = currentSectionIndex(y);
-      const section = sections[index];
-      if (!section || isFullyShown(section, y)) return;
-      const limit = sectionLimit(section);
-      if (y >= limit - 1) {
+      const cap = maxAllowedY();
+
+      if (y >= cap - 1) {
         e.preventDefault();
-        window.scrollTo(0, limit);
+        window.scrollTo(0, cap);
+        if (leaveArmed) {
+          tryAdvance(cap);
+          leaveArmed = false;
+        } else {
+          leaveArmed = true;
+        }
+        touchStartY = currentY;
+        return;
+      }
+
+      leaveArmed = false;
+      if (y > cap) {
+        e.preventDefault();
+        window.scrollTo(0, cap);
+        leaveArmed = true;
       }
     };
 
-    const onTouchEnd = () => {
-      touching = false;
-      clampIfNeeded();
+    const onKeyDown = (e) => {
+      if (document.documentElement.dataset.autoScrolling === '1') return;
+      const keys = ['PageDown', ' ', 'ArrowDown', 'End'];
+      if (!keys.includes(e.key)) return;
+      const y = window.scrollY || window.pageYOffset;
+      const cap = maxAllowedY();
+      if (y >= cap - 1) {
+        e.preventDefault();
+        if (leaveArmed) {
+          tryAdvance(cap);
+          leaveArmed = false;
+        } else {
+          leaveArmed = true;
+        }
+        return;
+      }
+      leaveArmed = false;
+      if (e.key === 'End' || y + window.innerHeight > cap) {
+        e.preventDefault();
+        window.scrollTo(0, cap);
+        leaveArmed = true;
+      }
+    };
+
+    const onGateTo = (e) => {
+      const id = e.detail?.id;
+      if (!id) return;
+      const idx = indexForId(id);
+      if (idx >= 0) {
+        gateIndex = idx;
+        leaveArmed = false;
+      }
+      applyGate();
     };
 
     window.addEventListener('wheel', onWheel, { passive: false });
-    window.addEventListener('scroll', clampIfNeeded, { passive: true });
+    window.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('touchstart', onTouchStart, { passive: true });
     window.addEventListener('touchmove', onTouchMove, { passive: false });
-    window.addEventListener('touchend', onTouchEnd, { passive: true });
+    window.addEventListener('keydown', onKeyDown, { passive: false });
+    window.addEventListener('scroll-gate-to', onGateTo);
+
+    applyGate();
 
     return () => {
       window.removeEventListener('wheel', onWheel);
-      window.removeEventListener('scroll', clampIfNeeded);
+      window.removeEventListener('scroll', onScroll);
       window.removeEventListener('touchstart', onTouchStart);
       window.removeEventListener('touchmove', onTouchMove);
-      window.removeEventListener('touchend', onTouchEnd);
+      window.removeEventListener('keydown', onKeyDown);
+      window.removeEventListener('scroll-gate-to', onGateTo);
     };
   }, []);
 }

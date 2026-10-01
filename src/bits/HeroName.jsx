@@ -26,6 +26,9 @@ function smoothScrollTo(y, duration = SCROLL_DOWN_MS) {
   const finish = () => {
     document.documentElement.style.scrollBehavior = prevBehavior;
     delete document.documentElement.dataset.autoScrolling;
+    window.dispatchEvent(
+      new CustomEvent('scroll-gate-to', { detail: { id: 'manifeste' } }),
+    );
   };
 
   const tick = (now) => {
