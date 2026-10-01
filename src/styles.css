@@ -671,6 +671,15 @@ html[data-theme='light'] .hero__bg {
   line-height: 0.95;
 }
 
+.hero__name.is-stacked.is-static {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.02em;
+  line-height: 0.92;
+  font-size: clamp(3.8rem, 18vw, 6rem);
+}
+
 .hero__name.is-glowing {
   --letter-step: 1.15s;
   --return-step: 1.85s;
@@ -938,8 +947,9 @@ html[data-theme='light'] .hero__name-return-line--glow {
     margin-inline: auto;
   }
 
-  .hero__name-row {
-    font-size: 168px;
+  .hero__name.is-stacked .hero__name-svg {
+    width: min(100%, 28rem);
+    margin-inline: auto;
   }
 }
 
