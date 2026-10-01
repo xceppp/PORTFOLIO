@@ -107,7 +107,7 @@ export const establishments = [
     logos: ['/logos/umi-mark.png', '/logos/est-mark.png'],
     wide: true,
   },
-  { id: 'ensa', name: 'ENSA Fès', logo: '/logos/ensa.png' },
+  { id: 'ensa', name: 'ENSA Fès', logo: '/logos/ensa.png', tone: 'light' },
   { id: 'usmba', name: 'Université Sidi Mohamed Ben Abdellah', logo: '/logos/usmba.png' },
   { id: 'lisa', name: 'Laboratoire LISA', logo: '/logos/lisa.png' },
   { id: 'psa', name: 'PSA Paris-Saclay', logo: '/logos/psa.svg' },

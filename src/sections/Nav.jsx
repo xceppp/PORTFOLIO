@@ -40,7 +40,21 @@ export default function Nav({ preference, setPreference, resolved }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [ctx, setCtx] = useState(null);
   const [copied, setCopied] = useState('');
+  const [showWordmark, setShowWordmark] = useState(false);
   const ctxRef = useRef(null);
+
+  useEffect(() => {
+    const hero = document.getElementById('accueil');
+    if (!hero) return undefined;
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        setShowWordmark(!entry.isIntersecting);
+      },
+      { threshold: 0.2, rootMargin: '-60px 0px 0px 0px' },
+    );
+    obs.observe(hero);
+    return () => obs.disconnect();
+  }, []);
 
   useEffect(() => {
     if (!mobileOpen) return undefined;
@@ -91,9 +105,11 @@ export default function Nav({ preference, setPreference, resolved }) {
         <div className="site-nav__inner">
           <a
             href="#accueil"
-            className="wordmark"
+            className={`wordmark ${showWordmark ? 'is-visible' : 'is-deferred'}`}
             onContextMenu={onWordmarkContext}
             aria-label={`${identity.wordmark} — Accueil`}
+            tabIndex={showWordmark ? 0 : -1}
+            aria-hidden={!showWordmark}
           >
             {identity.wordmark}
           </a>

@@ -58,6 +58,7 @@ html[data-theme='light'] {
 
 html {
   scroll-behavior: smooth;
+  overflow-x: clip;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -76,6 +77,8 @@ html {
 body {
   margin: 0;
   min-width: 320px;
+  overflow-x: clip;
+  overscroll-behavior-x: none;
   font-family: 'Geist Variable', 'Geist', ui-sans-serif, sans-serif;
   font-size: 16.5px;
   line-height: 1.6;
@@ -352,6 +355,19 @@ a:hover {
   text-decoration: none;
   flex-shrink: 0;
   white-space: nowrap;
+  transition: opacity 0.35s ease, visibility 0.35s ease;
+}
+
+/* Hidden over the hero so the name isn’t shown twice */
+.wordmark.is-deferred {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.wordmark.is-visible {
+  opacity: 1;
+  visibility: visible;
 }
 
 .site-nav__links {
@@ -597,19 +613,20 @@ a:hover {
 .hero__bg {
   position: absolute;
   inset: 0;
-  background: #0f1113;
+  background: var(--bg-200);
+  transition: background 0.35s ease;
 }
 
 html[data-theme='light'] .hero__bg {
-  background: #15171a;
+  background: var(--bg-100);
 }
 
 .hero__grid {
   position: absolute;
   inset: 0;
   background-image:
-    linear-gradient(rgba(236, 236, 234, 0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(236, 236, 234, 0.04) 1px, transparent 1px);
+    linear-gradient(color-mix(in srgb, var(--text-primary) 6%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--text-primary) 6%, transparent) 1px, transparent 1px);
   background-size: 48px 48px;
   mask-image: radial-gradient(ellipse at 35% 55%, #000 20%, transparent 72%);
   pointer-events: none;
@@ -622,7 +639,7 @@ html[data-theme='light'] .hero__bg {
   width: 100%;
   max-width: 920px;
   margin-inline: auto;
-  color: #ececea;
+  color: var(--text-primary);
   text-align: center;
   display: flex;
   flex-direction: column;
@@ -641,23 +658,26 @@ html[data-theme='light'] .hero__bg {
   margin: 0;
   width: 100%;
   max-width: 100%;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  align-items: baseline;
-  gap: 0.18em 0.28em;
-  line-height: 0.95;
+  line-height: 0;
   font-family: 'Geist Variable', 'Geist', ui-sans-serif, sans-serif;
   font-size: clamp(3.4rem, 11vw, 7.5rem);
   font-weight: 600;
   letter-spacing: -0.045em;
-  color: #ececea;
+  color: var(--text-primary);
+}
+
+.hero__name-plain {
+  display: block;
+  line-height: 0.95;
 }
 
 .hero__name.is-glowing {
+  --letter-step: 1.15s;
+  --return-step: 1.85s;
+  --name-cycle: calc(
+    var(--letter-count, 12) * var(--letter-step) + var(--return-step)
+  );
   display: block;
-  line-height: 0;
-  gap: 0;
 }
 
 .hero__name-svg {
@@ -675,18 +695,30 @@ html[data-theme='light'] .hero__bg {
 }
 
 .hero__name-fill {
-  fill: #ececea;
+  fill: var(--text-primary);
 }
 
-/* Letter-by-letter light, then a return line H → Z, then loop */
-.hero__name.is-glowing {
-  --letter-step: 1.15s;
-  --return-step: 1.85s;
-  --name-cycle: calc(
-    var(--letter-count, 12) * var(--letter-step) + var(--return-step)
-  );
+.hero__name-grad-a {
+  stop-color: #ffffff;
+}
+.hero__name-grad-b {
+  stop-color: #f5e6c0;
+}
+.hero__name-grad-c {
+  stop-color: #c29a5b;
 }
 
+html[data-theme='light'] .hero__name-grad-a {
+  stop-color: #16181b;
+}
+html[data-theme='light'] .hero__name-grad-b {
+  stop-color: #3a3d42;
+}
+html[data-theme='light'] .hero__name-grad-c {
+  stop-color: #8c6a2e;
+}
+
+/* Letter-by-letter light, then return line H → Z, then loop */
 .hero__name-stroke {
   stroke: #ffffff;
   stroke-width: 2.6;
@@ -697,6 +729,10 @@ html[data-theme='light'] .hero__bg {
   opacity: 0;
   animation: name-edge-light var(--name-cycle) linear infinite;
   animation-delay: calc(var(--letter-index, 0) * var(--letter-step));
+}
+
+html[data-theme='light'] .hero__name-stroke {
+  stroke: #16181b;
 }
 
 @keyframes name-edge-light {
@@ -733,10 +769,18 @@ html[data-theme='light'] .hero__bg {
   animation-delay: calc(var(--letter-count, 12) * var(--letter-step));
 }
 
+html[data-theme='light'] .hero__name-return-line {
+  stroke: #16181b;
+}
+
 .hero__name-return-line--glow {
   stroke: #f5e6c0;
   stroke-width: 7;
   opacity: 0;
+}
+
+html[data-theme='light'] .hero__name-return-line--glow {
+  stroke: rgba(22, 24, 27, 0.35);
 }
 
 @keyframes name-return-light {
@@ -892,13 +936,6 @@ html[data-theme='light'] .hero__bg {
 @media (max-width: 759px) {
   .hero__name {
     margin-inline: auto;
-    font-size: clamp(3.6rem, 17.5vw, 5.8rem);
-    gap: 0.1em 0.2em;
-    line-height: 0.92;
-  }
-
-  .hero__name.is-glowing {
-    line-height: 0;
   }
 
   .hero__name-row {
@@ -911,7 +948,7 @@ html[data-theme='light'] .hero__bg {
   font-size: clamp(13px, 1.55vw, 20px);
   font-weight: 500;
   letter-spacing: -0.015em;
-  color: #a3a6a9;
+  color: var(--text-secondary);
   max-width: none;
   line-height: 1.35;
   white-space: nowrap;
@@ -936,7 +973,7 @@ html[data-theme='light'] .hero__bg {
 
 .hero__rotate-label {
   margin: 0 0 0.4rem;
-  color: #c29a5b;
+  color: var(--brass);
   font-size: clamp(16px, 1.85vw, 19px);
   font-weight: 600;
   letter-spacing: -0.015em;
@@ -945,7 +982,7 @@ html[data-theme='light'] .hero__bg {
 
 .hero__rotate-support {
   margin: 0;
-  color: #a3a6a9;
+  color: var(--text-secondary);
   max-width: 42ch;
   font-size: clamp(15px, 1.7vw, 17.5px);
   line-height: 1.55;
@@ -961,22 +998,22 @@ html[data-theme='light'] .hero__bg {
 }
 
 .hero .btn--primary {
-  background: #ececea;
-  color: #15171a;
+  background: var(--inverted-bg);
+  color: var(--inverted-fg);
 }
 
 .hero .btn--primary:hover {
-  background: #c29a5b;
+  background: var(--brass);
   color: #15171a;
 }
 
 .hero .text-link {
-  color: #a3a6a9;
-  border-bottom-color: rgba(236, 236, 234, 0.18);
+  color: var(--text-secondary);
+  border-bottom-color: var(--ring);
 }
 
 .hero .text-link:hover {
-  color: #3fa7a0;
+  color: var(--teal);
 }
 
 @media (max-width: 759px) {
@@ -1162,6 +1199,29 @@ html[data-theme='light'] .logo-band__logo {
   filter: grayscale(1) brightness(0.18) contrast(1.2);
   mix-blend-mode: normal;
   opacity: 0.88;
+}
+
+/* ENSA etc. — white plate: invert + screen so the block doesn’t stay dark */
+.logo-band__item.tone-light .logo-band__logo {
+  filter: invert(1) grayscale(1) brightness(1.75) contrast(1.15);
+  mix-blend-mode: screen;
+  opacity: 0.95;
+}
+
+html[data-theme='light'] .logo-band__item.tone-light .logo-band__logo {
+  filter: grayscale(1) brightness(0.14) contrast(1.3);
+  mix-blend-mode: multiply;
+  opacity: 0.92;
+}
+
+.logo-band__item.tone-light:hover .logo-band__logo {
+  filter: invert(1) grayscale(1) brightness(1.9) contrast(1.2);
+  opacity: 1;
+}
+
+html[data-theme='light'] .logo-band__item.tone-light:hover .logo-band__logo {
+  filter: grayscale(1) brightness(0.1) contrast(1.35);
+  mix-blend-mode: multiply;
 }
 
 /* UMI·EST pair: mono, shared midline via flex */
@@ -1397,6 +1457,22 @@ html[data-theme='light'] .logo-band__item.is-pair:hover .logo-band__logo {
   height: auto;
 }
 
+.line-map__hint {
+  display: none;
+  margin: -0.35rem 0 0.85rem;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--brass);
+}
+
+@media (max-width: 759px) {
+  .line-map__hint {
+    display: block;
+  }
+}
+
 .line-map {
   position: relative;
   display: grid;
@@ -1404,6 +1480,25 @@ html[data-theme='light'] .logo-band__item.is-pair:hover .logo-band__logo {
   align-items: center;
   gap: 0.85rem;
   min-height: 220px;
+}
+
+.line-map__open {
+  display: none;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--brass);
+}
+
+@media (max-width: 759px) {
+  .line-map__open {
+    display: inline-block;
+  }
+
+  .line-map__btn {
+    gap: 0.55rem;
+  }
 }
 
 .line-map__stage {
