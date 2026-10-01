@@ -83,10 +83,11 @@ export default function Trajectoire() {
     <section id={trajectoire.id} className="section trajectoire trajectoire--line">
       <div className="shell">
         <AnimatedContent>
-          <h2 className="section-title">{trajectoire.title}</h2>
+          <h2 className="section-title trajectoire__heading">
+            <span className="trajectoire__ouvrir">Ouvrir</span>
+            {trajectoire.title}
+          </h2>
         </AnimatedContent>
-
-        <p className="line-map__hint">Ouvrir</p>
 
         <div className="line-map" aria-label="Ligne du parcours">
           <NavArrow
@@ -117,7 +118,6 @@ export default function Trajectoire() {
                       <span className="line-map__title">{stop.role}</span>
                       <span className="line-map__pin" aria-hidden="true" />
                       <span className="line-map__date mono">{stop.years}</span>
-                      <span className="line-map__open">Ouvrir</span>
                     </button>
                   </li>
                 );

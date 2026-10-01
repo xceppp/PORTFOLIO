@@ -91,16 +91,20 @@ function NameLines({
       focusable="false"
     >
       <defs>
-        <filter id={glowId} x="-25%" y="-50%" width="150%" height="200%">
-          <feGaussianBlur stdDeviation="2.8" result="blur" />
+        <filter id={glowId} x="-40%" y="-80%" width="180%" height="260%">
+          <feGaussianBlur stdDeviation="4.5" result="blur" />
+          <feGaussianBlur stdDeviation="1.2" in="SourceGraphic" result="tight" />
           <feMerge>
             <feMergeNode in="blur" />
+            <feMergeNode in="blur" />
+            <feMergeNode in="tight" />
             <feMergeNode in="SourceGraphic" />
           </feMerge>
         </filter>
-        <filter id={`${glowId}-line`} x="-20%" y="-200%" width="140%" height="500%">
-          <feGaussianBlur stdDeviation="3.5" result="blur" />
+        <filter id={`${glowId}-line`} x="-30%" y="-250%" width="160%" height="600%">
+          <feGaussianBlur stdDeviation="5" result="blur" />
           <feMerge>
+            <feMergeNode in="blur" />
             <feMergeNode in="blur" />
             <feMergeNode in="SourceGraphic" />
           </feMerge>
@@ -142,11 +146,13 @@ export default function HeroName({ text }) {
   const words = text.trim().split(/\s+/);
   const letterCount = words.reduce((n, w) => n + w.length, 0);
   const scrolledRef = useRef(false);
+  const rootRef = useRef(null);
+  const [active, setActive] = useState(true);
   const stacked = mobile && words.length > 1;
 
   useEffect(() => {
     if (reduced || scrolledRef.current) return undefined;
-    const afterLastLetter = letterCount * LETTER_STEP_MS + 320;
+    /* Brief beat on the hero, then enter Manifeste */
     const id = window.setTimeout(() => {
       if (scrolledRef.current) return;
       scrolledRef.current = true;
@@ -154,13 +160,25 @@ export default function HeroName({ text }) {
         behavior: 'smooth',
         block: 'start',
       });
-    }, afterLastLetter);
+    }, 3500);
     return () => window.clearTimeout(id);
-  }, [reduced, letterCount]);
+  }, [reduced]);
+
+  useEffect(() => {
+    const el = rootRef.current;
+    if (!el || reduced) return undefined;
+    const obs = new IntersectionObserver(
+      ([entry]) => setActive(entry.isIntersecting),
+      { threshold: 0.15 },
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [reduced]);
 
   if (reduced) {
     return (
       <h1
+        ref={rootRef}
         className={`hero__name is-static ${stacked ? 'is-stacked' : ''}`}
         aria-label={text}
       >
@@ -179,7 +197,10 @@ export default function HeroName({ text }) {
 
   return (
     <h1
-      className={`hero__name is-glowing ${stacked ? 'is-stacked' : ''}`}
+      ref={rootRef}
+      className={`hero__name is-glowing ${stacked ? 'is-stacked' : ''} ${
+        active ? '' : 'is-paused'
+      }`}
       aria-label={text}
       style={{
         '--letter-count': letterCount,

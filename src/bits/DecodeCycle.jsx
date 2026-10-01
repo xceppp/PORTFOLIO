@@ -37,8 +37,8 @@ export default function DecodeCycle({ text, className = '', as: Tag = 'p' }) {
 
     cancelAnimationFrame(frame.current);
     const start = performance.now();
-    const duration = 720;
-    const messyHold = 180;
+    const duration = 420;
+    const messyHold = 80;
 
     const run = (now) => {
       const elapsed = now - start;
