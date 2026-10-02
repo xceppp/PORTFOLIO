@@ -31,7 +31,7 @@ export function ThreeDPaper({
       : originalSource);
 
   // Include a build stamp so theme/srcDoc patches remount after HMR
-  const frameKey = `${theme}::${article?.doi || 'default'}::v3`;
+  const frameKey = `${theme}::${article?.doi || 'default'}::v5`;
   const [front, setFront] = useState(null);
   const [back, setBack] = useState(null);
 
@@ -80,8 +80,8 @@ export function ThreeDPaper({
       if (!prev || prev.key !== key) return prev;
       return { ...prev, ready: true };
     });
-    // Drop the previous frame after the new one is visible
-    window.setTimeout(() => setBack(null), 180);
+    // Keep previous paper up until the new one has faded in
+    window.setTimeout(() => setBack(null), 420);
   };
 
   return (
@@ -142,7 +142,7 @@ export function ThreeDPaper({
             background: 'transparent',
             opacity: front.ready || !back ? 1 : 0,
             pointerEvents: front.ready ? 'auto' : 'none',
-            transition: 'opacity 160ms ease-out',
+            transition: 'opacity 320ms ease',
             zIndex: 2,
           }}
         />

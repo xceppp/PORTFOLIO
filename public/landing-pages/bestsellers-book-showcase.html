@@ -2513,10 +2513,12 @@
         });
       }
 
-      function selectBook(card) {
+      let pendingOpenCard = null;
+      let bookSwitchTimer = 0;
+
+      function openBook(card) {
         const data = books[card.dataset.book];
         if (!data) return;
-        if (body.dataset.mode === "detail" && selectedCard === card) return;
 
         selectedCard = card;
         focusIndex = Math.max(0, bookOrder.indexOf(card.dataset.book));
@@ -2558,6 +2560,25 @@
             detailPanel.scrollTop = 0;
           }
         }, reducedMotion.matches ? 0 : 120);
+      }
+
+      function selectBook(card) {
+        const data = books[card.dataset.book];
+        if (!data) return;
+        if (body.dataset.mode === "detail") {
+          if (selectedCard === card) return;
+          // Return to the three books, then open the clicked axis
+          pendingOpenCard = card;
+          window.clearTimeout(bookSwitchTimer);
+          closeDetail();
+          bookSwitchTimer = window.setTimeout(() => {
+            const next = pendingOpenCard;
+            pendingOpenCard = null;
+            if (next) openBook(next);
+          }, reducedMotion.matches ? 40 : 760);
+          return;
+        }
+        openBook(card);
       }
 
       function closeDetail() {
@@ -2623,11 +2644,7 @@
           const currentId = selectedCard?.dataset?.book || bookOrder[focusIndex];
           const idx = Math.max(0, bookOrder.indexOf(currentId));
           const card = cardByBook(bookOrder[(idx + dir + bookOrder.length) % bookOrder.length]);
-          if (card) {
-            focusIndex = bookOrder.indexOf(card.dataset.book);
-            setFocusIndex(focusIndex);
-            selectBook(card);
-          }
+          if (card) selectBook(card);
           return;
         }
         setFocusIndex(focusIndex + dir);

@@ -93,17 +93,17 @@ export function buildArticlePaperDocument(baseHtml, article, theme = 'dark') {
     'html,body{height:100%;background:var(--bg);overflow:hidden;',
     'html,body{height:100%;background:transparent;overflow:hidden;',
   );
-  if (!html.includes('chalh-paper-float')) {
-    html = html.replace(
-      '</style>',
-      `/* chalh-paper-float */
-  html,body,#bg{background:transparent!important}
-  #dof,#vig,#grain,#grain2{display:none!important;opacity:0!important}
+  // Floating paper only — no host plate / wordmark / vignette behind the sheet
+  html = html.replace(
+    '</style>',
+    `/* chalh-paper-float-v5 */
+  html,body,#bg,#gl{background:transparent!important;background-color:transparent!important}
+  #bg{display:none!important}
+  #dof,#vig,#grain,#grain2{display:none!important;opacity:0!important;pointer-events:none!important}
   #hint{color:${theme === 'light' ? 'rgba(22,24,27,.45)' : 'rgba(236,236,234,.38)'}!important}
   #hint b{color:${theme === 'light' ? 'rgba(22,24,27,.72)' : 'rgba(236,236,234,.62)'}!important}
 </style>`,
-    );
-  }
+  );
   // Drop the dark rectangular halo plane behind the sheet
   html = html.replace(
     'halo.position.z = -0.62; group.add(halo);',
@@ -131,49 +131,37 @@ renderer.setClearColor(0x000000, 0);`,
   rr(ctx,36,36,1128,1584,10); ctx.stroke();`,
     `  /* chalh: no square frame strokes on the floating sheet */`,
   );
-  // Sheet tint: light stays cool glass; dark stays luminous so it reads on black
+  // Sheet tint — glass sheet only (dark theme stays cool/inked, never a white plate)
   html = html.replace(
     'map: tex, color: new T.Color(0xc4d2e8), side: T.DoubleSide, metalness: 0.0,',
     theme === 'light'
       ? 'map: tex, color: new T.Color(0xe8eef6), side: T.DoubleSide, metalness: 0.0,'
-      : 'map: tex, color: new T.Color(0xe4eaf4), side: T.DoubleSide, metalness: 0.02,',
+      : 'map: tex, color: new T.Color(0xb8c4d4), side: T.DoubleSide, metalness: 0.0,',
   );
   html = html.replace(
     'transparent: true, alphaTest: 0.012, opacity: 1',
     theme === 'light'
-      ? 'transparent: true, alphaTest: 0.012, opacity: 0.94'
-      : 'transparent: true, alphaTest: 0.004, opacity: 1',
+      ? 'transparent: true, alphaTest: 0.012, opacity: 0.9'
+      : 'transparent: true, alphaTest: 0.02, opacity: 0.82',
   );
 
-  // Sheet body fill — dark needs near-opaque plate or it vanishes on black hosts
+  // Soft glass fill — never a solid white/graphite rectangle
   html = html.replace(
     "ctx.fillStyle='rgba(255,255,255,.030)'; ctx.fillRect(0,0,1200,1656);",
     theme === 'light'
-      ? "ctx.fillStyle='rgba(248,249,250,.42)'; ctx.fillRect(0,0,1200,1656);"
-      : "ctx.fillStyle='rgba(244,246,250,.98)'; ctx.fillRect(0,0,1200,1656);",
+      ? "ctx.fillStyle='rgba(248,249,250,.22)'; ctx.fillRect(0,0,1200,1656);"
+      : "ctx.fillStyle='rgba(200,210,224,.08)'; ctx.fillRect(0,0,1200,1656);",
   );
 
-  // Dark: shader outA was ~0.15 over black — floor alpha so the sheet actually reads
-  if (theme !== 'light') {
-    html = html.replace(
-      `float baseA = diffuseColor.a / max(opacity, 1e-4);
-      float outA  = clamp(baseA + fres*uRimA
-                        + uSpecA*dot(outgoingLight, vec3(0.3333)), 0.0, 1.0) * opacity;`,
-      `float baseA = max(diffuseColor.a / max(opacity, 1e-4), 0.96);
-      float outA  = clamp(baseA + fres*uRimA
-                        + uSpecA*dot(outgoingLight, vec3(0.3333)), 0.0, 1.0) * opacity;`,
-    );
-  }
-
-  // Frost: light keeps soft plate; dark uses stronger frost so the sheet reads on black
+  // Frost fringe stays soft
   html = html.replace(
     "fr.addColorStop(0,'rgba(255,255,255,0)');   fr.addColorStop(.26,'rgba(255,255,255,.060)');\n  fr.addColorStop(.74,'rgba(255,255,255,.060)'); fr.addColorStop(1,'rgba(255,255,255,0)');",
     theme === 'light'
-      ? "fr.addColorStop(0,'rgba(244,245,243,0)');   fr.addColorStop(.22,'rgba(244,245,243,.22)');\n  fr.addColorStop(.78,'rgba(244,245,243,.22)'); fr.addColorStop(1,'rgba(244,245,243,0)');"
-      : "fr.addColorStop(0,'rgba(236,236,234,0)');   fr.addColorStop(.18,'rgba(236,236,234,.28)');\n  fr.addColorStop(.82,'rgba(236,236,234,.28)'); fr.addColorStop(1,'rgba(236,236,234,0)');",
+      ? "fr.addColorStop(0,'rgba(244,245,243,0)');   fr.addColorStop(.22,'rgba(244,245,243,.16)');\n  fr.addColorStop(.78,'rgba(244,245,243,.16)'); fr.addColorStop(1,'rgba(244,245,243,0)');"
+      : "fr.addColorStop(0,'rgba(236,236,234,0)');   fr.addColorStop(.22,'rgba(236,236,234,.14)');\n  fr.addColorStop(.78,'rgba(236,236,234,.14)'); fr.addColorStop(1,'rgba(236,236,234,0)');",
   );
 
-  // Ink: both themes use dark type on a luminous sheet (sheet must read on black hosts)
+  // Dark ink on translucent sheet (both themes)
   const ink = "'#0f1113'";
   const ink78 = "'rgba(15,17,19,.78)'";
   const ink62 = "'rgba(15,17,19,.62)'";
@@ -228,7 +216,7 @@ renderer.setClearColor(0x000000, 0);`,
     `ctx.fillText(${esc(' works')}, M+w, 1516);`,
   );
 
-  // Both themes: dark ink on luminous sheet (footer / side / certificate paints)
+  // Dark ink on remaining certificate paints (both themes)
   {
     const paintStart = html.indexOf('function drawGlass(ctx){');
     const paintEnd = html.indexOf('function makeCertTexture()', paintStart);

@@ -18,12 +18,12 @@ function LogoItem({ name, logo, wide }) {
   );
 }
 
-function LogoGroup({ items, ariaHidden = false }) {
+function LogoGroup({ items, ariaHidden = false, suffix = '' }) {
   return (
     <div className="logo-band__group" aria-hidden={ariaHidden || undefined}>
-      {items.map((item) => (
+      {items.map((item, i) => (
         <LogoItem
-          key={item.id}
+          key={`${item.id}${suffix}-${i}`}
           name={item.name}
           logo={item.logo}
           wide={item.wide}
@@ -42,8 +42,8 @@ export default function LogoBand() {
     <div className="logo-band" aria-label="Établissements du parcours">
       <div className={`logo-band__viewport ${reduced ? 'is-static' : ''}`}>
         <div className={`logo-band__track ${reduced ? '' : 'is-marquee'}`}>
-          <LogoGroup items={sequence} />
-          {!reduced ? <LogoGroup items={sequence} ariaHidden /> : null}
+          <LogoGroup items={sequence} suffix="-a" />
+          {!reduced ? <LogoGroup items={sequence} ariaHidden suffix="-b" /> : null}
         </div>
       </div>
     </div>
