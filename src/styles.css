@@ -4151,12 +4151,14 @@ html[data-theme='dark'] .production__paper-stage iframe {
     height: min(88vh, 760px);
     min-height: 560px;
     overflow: hidden;
+    /* Keep book taps/swipes inside the iframe — pan-y was stealing touches */
+    touch-action: none;
   }
 
   .pilotage__stage iframe,
   .pilotage__stage .landing-page-frame,
   .pilotage__stage .threeui-background {
-    touch-action: pan-y;
+    touch-action: none;
   }
 }
 
