@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="360" height="120" viewBox="0 0 360 120" role="img" aria-label="Centrale Lille">
+  <rect x="28" y="30" width="304" height="60" rx="8" fill="none" stroke="#1a1d21" stroke-width="3"/>
+  <text x="180" y="56" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="700" letter-spacing="4" fill="#1a1d21">CENTRALE</text>
+  <text x="180" y="80" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="700" letter-spacing="10" fill="#8c6a2e">LILLE</text>
+</svg>

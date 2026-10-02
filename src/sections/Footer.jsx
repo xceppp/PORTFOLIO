@@ -1,4 +1,4 @@
-import { a11y, footer, identity } from '../content';
+import { a11y, contacts, footer, identity } from '../content';
 
 function ExternalHint() {
   return <span className="visually-hidden"> {a11y.newTab}</span>;
@@ -44,6 +44,13 @@ function DossierPoem({ title, links }) {
   );
 }
 
+const MOBILE_PROFILES = [
+  { label: 'LinkedIn', href: contacts.linkedin, external: true },
+  { label: 'Scopus', href: contacts.scopus, external: true },
+  { label: 'SciProfiles', href: contacts.sciprofiles, external: true },
+  { label: 'ORCID', href: contacts.orcid, external: true },
+];
+
 export default function Footer({ preference, setPreference, resolved }) {
   const active = preference === 'system' ? resolved : preference;
   const isDark = active === 'dark';
@@ -61,6 +68,14 @@ export default function Footer({ preference, setPreference, resolved }) {
             {compactLinks.map((link) => (
               <FooterLink key={link.label} link={link} />
             ))}
+          </nav>
+          <nav className="site-footer__mobile-profiles" aria-label="Profils scientifiques">
+            <p className="site-footer__mobile-profiles-label">Profils</p>
+            <div className="site-footer__mobile-profiles-links">
+              {MOBILE_PROFILES.map((link) => (
+                <FooterLink key={link.label} link={link} />
+              ))}
+            </div>
           </nav>
           <div className="site-footer__mobile-bottom">
             <p>{footer.copyright}</p>

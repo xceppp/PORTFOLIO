@@ -21,7 +21,7 @@ export function ThreeDPaper({
   const [documentVisible, setDocumentVisible] = useState(
     () => typeof document === 'undefined' || !document.hidden,
   );
-  const canvas = theme === 'light' ? '#f4f5f3' : '#15171a';
+  const canvas = 'transparent';
 
   const srcDoc =
     srcDocProp ||
@@ -92,6 +92,7 @@ export function ThreeDPaper({
         position: 'relative',
         overflow: 'hidden',
         background: canvas,
+        isolation: 'auto',
         pointerEvents: 'auto',
         ...style,
       }}
@@ -111,7 +112,7 @@ export function ThreeDPaper({
             width: '100%',
             height: '100%',
             border: 0,
-            background: canvas,
+            background: 'transparent',
             opacity: 1,
             pointerEvents: 'none',
             zIndex: 1,
@@ -134,7 +135,7 @@ export function ThreeDPaper({
             width: '100%',
             height: '100%',
             border: 0,
-            background: canvas,
+            background: 'transparent',
             opacity: front.ready || !back ? 1 : 0,
             pointerEvents: front.ready ? 'auto' : 'none',
             transition: 'opacity 160ms ease-out',

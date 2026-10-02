@@ -3,7 +3,7 @@
 <head>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark">
@@ -642,13 +642,13 @@
         #000 calc(100% - 76px),
         transparent 100%
       );
-      scrollbar-color: rgba(198, 139, 140, .76) rgba(73, 66, 49, .35);
+      scrollbar-color: rgba(194, 154, 91, .72) rgba(73, 66, 49, .35);
       scrollbar-width: thin;
     }
 
     .detail-scroll:focus-visible {
       border-radius: 8px;
-      outline: 1px solid rgba(231, 184, 185, .7);
+      outline: 1px solid rgba(194, 154, 91, .7);
       outline-offset: 8px;
     }
 
@@ -663,7 +663,7 @@
 
     .detail-scroll::-webkit-scrollbar-thumb {
       border-radius: 999px;
-      background: rgba(198, 139, 140, .76);
+      background: rgba(194, 154, 91, .72);
     }
 
     .doc-section {
@@ -701,9 +701,9 @@
     .doc-steps li::before {
       content: counter(guide-step, decimal-leading-zero);
       padding-top: 2px;
-      color: rgba(231, 184, 185, .7);
+      color: rgba(194, 154, 91, .78);
       font-size: 12px;
-      font-style: italic;
+      font-style: normal;
       letter-spacing: .08em;
     }
 
@@ -936,8 +936,8 @@
       height: 60%;
       border-radius: 72% 72% 58% 58%;
       background:
-        radial-gradient(circle at 50% 82%, rgba(187, 103, 108, .9) 0 10%, transparent 11%),
-        linear-gradient(180deg, #f5d8d3 0%, #e6aaa9 74%, #c78184 100%);
+        radial-gradient(circle at 50% 82%, rgba(140, 106, 46, .9) 0 10%, transparent 11%),
+        linear-gradient(180deg, #f0e2c4 0%, #d4b57a 74%, #a8843f 100%);
       box-shadow: inset 1px 1px 0 rgba(255, 255, 255, .42);
       transform-origin: 50% 100%;
     }
@@ -1405,8 +1405,17 @@
     .detail-description,
     .doc-label,
     .doc-review,
+    .doc-step-copy,
+    .doc-step-copy strong,
+    .doc-step-copy span,
+    .doc-steps,
+    .doc-steps li,
     .prompt-block,
-    .open-badge {
+    .meta-row,
+    .menu-link,
+    .open-badge,
+    .review-source,
+    .year {
       font-family: "Geist", "Geist Variable", system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif !important;
       font-style: normal !important;
     }
@@ -1556,34 +1565,120 @@
       background: color-mix(in srgb, #ffffff 82%, var(--canvas)) !important;
     }
 
+    /* Detail copy — aligned Geist scale, no pink / no italic drift */
+    .detail-panel {
+      text-align: left !important;
+      font-family: "Geist", "Geist Variable", system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif !important;
+    }
+
     .detail-title {
       color: var(--brass) !important;
+      font-family: inherit !important;
+      font-style: normal !important;
+      font-weight: 600 !important;
+      font-size: clamp(2rem, 3.4vw, 2.75rem) !important;
+      line-height: 1.12 !important;
+      letter-spacing: -0.03em !important;
+      margin: 0 0 0.85rem !important;
+      text-align: left !important;
     }
 
     .detail-description,
     .doc-review {
       color: var(--text) !important;
       opacity: 0.94;
+      font-family: inherit !important;
+      font-style: normal !important;
+      font-weight: 400 !important;
+      font-size: 0.98rem !important;
+      line-height: 1.65 !important;
+      letter-spacing: 0 !important;
+      max-width: 36rem !important;
+      text-align: left !important;
+      margin: 0 !important;
     }
 
     .doc-label {
       color: var(--brass) !important;
+      font-family: inherit !important;
+      font-style: normal !important;
+      font-weight: 600 !important;
+      font-size: 0.72rem !important;
+      letter-spacing: 0.12em !important;
+      text-transform: uppercase !important;
+      margin: 0 0 0.75rem !important;
+      text-align: left !important;
+    }
+
+    .doc-steps {
+      gap: 0.9rem !important;
+    }
+
+    .doc-steps li {
+      grid-template-columns: 2rem 1fr !important;
+      gap: 0.75rem !important;
+      align-items: start !important;
+    }
+
+    .doc-steps li::before {
+      color: var(--brass) !important;
+      font-family: "Geist Mono", "Geist Mono Variable", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+      font-style: normal !important;
+      font-weight: 500 !important;
+      font-size: 0.75rem !important;
+      letter-spacing: 0.04em !important;
+      line-height: 1.5 !important;
+      padding-top: 0.15rem !important;
+    }
+
+    .doc-step-copy {
+      gap: 0.2rem !important;
+    }
+
+    .doc-step-copy strong,
+    .doc-steps strong,
+    .doc-steps b,
+    .prompt-block strong,
+    .prompt-block b {
+      color: var(--text) !important;
+      font-family: inherit !important;
+      font-style: normal !important;
+      font-weight: 600 !important;
+      font-size: 0.95rem !important;
+      line-height: 1.45 !important;
+      letter-spacing: -0.01em !important;
+    }
+
+    .doc-step-copy span,
+    .doc-review {
+      color: var(--muted) !important;
+      font-family: inherit !important;
+      font-style: normal !important;
+      font-size: 0.9rem !important;
+      line-height: 1.6 !important;
     }
 
     .prompt-block {
       background: color-mix(in srgb, var(--surface-2) 96%, transparent) !important;
       border: 1px solid var(--ring) !important;
       color: var(--text) !important;
+      border-radius: 10px !important;
+      padding: 1rem 1.05rem !important;
     }
 
     .prompt-block p,
     .prompt-block li,
-    .prompt-block strong,
     .detail-scroll,
-    .detail-scroll p,
+    .detail-scroll p:not(.doc-label),
     .detail-scroll li,
     .detail-scroll span {
       color: var(--text) !important;
+      font-family: inherit !important;
+      font-style: normal !important;
+    }
+
+    .detail-scroll .doc-label {
+      color: var(--brass) !important;
     }
 
     html[data-theme="light"] .prompt-block {
@@ -1593,6 +1688,11 @@
 
     .prompt-block code {
       color: var(--text) !important;
+      font-family: "Geist Mono", "Geist Mono Variable", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+      font-style: normal !important;
+      font-size: 0.82rem !important;
+      line-height: 1.6 !important;
+      letter-spacing: 0 !important;
     }
 
     html[data-theme="light"] .prompt-block code {
@@ -1603,20 +1703,12 @@
       color: #ececea !important;
     }
 
-    .doc-steps strong,
-    .doc-steps b,
-    .prompt-block strong,
-    .prompt-block b {
-      color: var(--text) !important;
-    }
-
     html[data-theme="light"] .doc-steps strong,
     html[data-theme="light"] .doc-steps b,
     html[data-theme="light"] .prompt-block strong,
     html[data-theme="light"] .prompt-block b {
       color: #16181b !important;
     }
-
 
     html[data-theme="light"] .detail-description,
     html[data-theme="light"] .doc-review,
@@ -1625,6 +1717,30 @@
     html[data-theme="light"] .prompt-block li {
       color: #16181b !important;
       opacity: 1;
+    }
+
+    .detail-scroll {
+      scrollbar-color: color-mix(in srgb, var(--brass) 72%, transparent) color-mix(in srgb, var(--muted) 22%, transparent) !important;
+    }
+
+    .detail-scroll::-webkit-scrollbar-thumb {
+      background: color-mix(in srgb, var(--brass) 72%, transparent) !important;
+    }
+
+    .detail-scroll:focus-visible {
+      outline-color: color-mix(in srgb, var(--brass) 70%, transparent) !important;
+    }
+
+    .meta-row {
+      color: var(--brass) !important;
+      font-style: normal !important;
+      font-family: inherit !important;
+      align-items: center !important;
+    }
+
+    .menu-link {
+      color: var(--brass) !important;
+      font-style: normal !important;
     }
 
     .pill,
@@ -1644,50 +1760,166 @@
     }
 
     .bottom-dock,
-    .meta-row,
+    .meta-row {
+      background: transparent !important;
+      box-shadow: none !important;
+      border: 0 !important;
+    }
+
+    /* Floating pills only — no dark rail plate */
     .action-rail {
       background: transparent !important;
+      border: 0 !important;
+      box-shadow: none !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+      padding: 0 !important;
+      gap: 0.55rem !important;
+      border-radius: 0 !important;
+    }
+
+    .action-rail .pill,
+    .action-rail .ticket-button {
+      font-style: normal !important;
+      font-family: inherit !important;
+      font-weight: 600 !important;
+      font-size: 0.84rem !important;
+      letter-spacing: 0.01em !important;
+      border-radius: 999px !important;
+      min-height: 46px !important;
+      background: color-mix(in srgb, var(--surface) 92%, transparent) !important;
+      color: var(--text) !important;
+      border: 1px solid var(--ring) !important;
+      box-shadow: none !important;
+    }
+
+    .action-rail .pill.icon-only {
+      flex: 0 0 46px !important;
+      width: 46px !important;
+      min-width: 46px !important;
+      min-height: 46px !important;
+      border-radius: 999px !important;
+      background: color-mix(in srgb, var(--surface) 92%, transparent) !important;
+      color: var(--text) !important;
+    }
+
+    .action-rail .pill.icon-only[aria-pressed="true"] svg {
+      fill: var(--brass) !important;
+      stroke: var(--brass) !important;
+    }
+
+    .brand {
+      font-family: "Geist", "Geist Variable", system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif !important;
+      font-style: normal !important;
+      font-weight: 600 !important;
+      font-size: clamp(1.05rem, 1.5vw, 1.25rem) !important;
+      letter-spacing: -0.02em !important;
+      color: var(--brass) !important;
     }
 
     .review-source,
     .year {
       color: var(--muted) !important;
+      font-style: normal !important;
+      font-family: inherit !important;
+      font-size: 0.85rem !important;
     }
 
 
     
-    /* CHALH mobile carousel — one axis at a time */
+    /* CHALH mobile — list all three books; swipe after open */
     @media (max-width: 900px) {
-      .book-card[data-book="codex"],
-      .book-card[data-book="claude"],
-      .book-card[data-book="cursor"] {
+      [data-mode="gallery"] .gallery {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 0 !important;
+        padding: 0 4vw !important;
+      }
+
+      [data-mode="gallery"] .book-card[data-book="codex"],
+      [data-mode="gallery"] .book-card[data-book="claude"],
+      [data-mode="gallery"] .book-card[data-book="cursor"] {
+        position: relative !important;
+        left: auto !important;
+        top: auto !important;
+        width: min(28vw, 118px) !important;
+        height: auto !important;
+        aspect-ratio: 0.68 !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
+        transform: none !important;
+        --r: 0deg !important;
+        --yaw: 0deg !important;
+        --hover-y: 0px !important;
+        --local-x: 0px !important;
+        --local-y: 0px !important;
+        margin: 0 1.5vw !important;
+        z-index: 2 !important;
+        transition: transform 220ms ease, filter 220ms ease !important;
+      }
+
+      [data-mode="gallery"] .book-card.is-focus,
+      [data-mode="gallery"] .book-card[data-hovered="true"] {
+        transform: translateY(-8px) scale(1.04) !important;
+        z-index: 4 !important;
+        filter: drop-shadow(0 14px 22px rgba(0, 0, 0, 0.35));
+      }
+
+      [data-mode="gallery"] .book-card .cover-title {
+        font-size: clamp(14px, 3.8vw, 18px) !important;
+      }
+
+      [data-mode="gallery"] .book-card .cover-subtitle,
+      [data-mode="gallery"] .book-card .cover-kicker,
+      [data-mode="gallery"] .book-card .cover-footer {
+        font-size: clamp(8px, 2.2vw, 11px) !important;
+      }
+
+      [data-mode="gallery"] .book-card .open-badge {
+        font-size: 10px !important;
+      }
+
+      [data-mode="detail"] .book-card[data-book="codex"],
+      [data-mode="detail"] .book-card[data-book="claude"],
+      [data-mode="detail"] .book-card[data-book="cursor"] {
+        position: absolute !important;
         left: 50% !important;
-        top: 44% !important;
-        width: min(68vw, 290px) !important;
+        top: 18% !important;
+        width: min(46vw, 200px) !important;
         opacity: 0 !important;
         pointer-events: none !important;
         transform: translate3d(-50%, -50%, 0) scale(0.92) !important;
-        transition: opacity 280ms ease, transform 320ms ease !important;
         z-index: 1 !important;
-      }
-
-      .book-card.is-focus {
-        opacity: 1 !important;
-        pointer-events: auto !important;
-        transform: translate3d(-50%, -50%, 0) scale(1) !important;
-        z-index: 4 !important;
       }
 
       [data-mode="detail"] .book-card.is-focus,
       [data-mode="detail"] .book-card.selected {
-        top: 18% !important;
-        width: min(46vw, 200px) !important;
         opacity: 1 !important;
         pointer-events: none !important;
+        transform: translate3d(-50%, -50%, 0) scale(1) !important;
+        z-index: 8 !important;
       }
 
       [data-mode="gallery"] .hero-word {
-        opacity: 0.1 !important;
+        opacity: 0.08 !important;
+      }
+
+      /* swipe hint under the three books */
+      [data-mode="gallery"] .gallery::after {
+        content: "Touchez un livre · glissez pour changer";
+        position: absolute;
+        left: 50%;
+        bottom: 12%;
+        transform: translateX(-50%);
+        width: max-content;
+        max-width: 90%;
+        color: var(--muted);
+        font-size: 11px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        pointer-events: none;
+        opacity: 0.78;
       }
     }
 
@@ -1754,6 +1986,17 @@
         width: auto !important;
       }
 
+      .axis-nav {
+        display: flex;
+        gap: 0.5rem;
+        margin: 0 0 0.55rem;
+      }
+
+      .axis-nav__btn {
+        flex: 1;
+        justify-content: center;
+      }
+
       [data-mode="detail"] .close-button {
         top: 12px !important;
         right: 12px !important;
@@ -1761,7 +2004,21 @@
       }
 
       .gallery {
-        touch-action: pan-y;
+        touch-action: pan-x pan-y;
+      }
+
+      .stage {
+        touch-action: pan-x pan-y;
+      }
+    }
+
+    .axis-nav {
+      display: none;
+    }
+
+    @media (max-width: 900px) {
+      [data-mode="detail"] .axis-nav {
+        display: flex;
       }
     }
 
@@ -1897,6 +2154,10 @@
           <span class="year" id="detailYear">2026</span>
         </div>
         <hr class="detail-rule">
+        <div class="axis-nav" aria-label="Naviguer entre les axes">
+          <button class="pill axis-nav__btn" type="button" data-axis-nav="-1">← Précédent</button>
+          <button class="pill axis-nav__btn" type="button" data-axis-nav="1">Suivant →</button>
+        </div>
         <div class="action-rail" aria-label="Actions de l'axe">
           <button class="pill language" type="button" data-toast="Direction EST · 2026">
             <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -2234,6 +2495,7 @@
       let swipeX = null;
       let swipeY = null;
       let swipeActive = false;
+      let suppressClickUntil = 0;
 
       stage.addEventListener("pointerdown", (event) => {
         if (event.pointerType === "mouse" && event.button !== 0) return;
@@ -2250,8 +2512,16 @@
         swipeX = null;
         swipeY = null;
         if (Math.abs(dx) < 48 || Math.abs(dx) < Math.abs(dy) * 1.15) return;
-        // Avoid stealing taps on buttons/links
-        if (event.target.closest("button, a, .detail-scroll, .bottom-dock")) return;
+        // In detail: allow swipe across panel (not while scrolling text)
+        if (body.dataset.mode === "detail") {
+          if (event.target.closest(".detail-scroll") && Math.abs(dy) > Math.abs(dx) * 0.8) return;
+          suppressClickUntil = performance.now() + 360;
+          cycleBook(dx < 0 ? 1 : -1);
+          return;
+        }
+        // Gallery: swipe cycles focus between the three listed books
+        if (event.target.closest("a, .bottom-dock, .icon-button, .ticket-button, .close-button")) return;
+        suppressClickUntil = performance.now() + 360;
         cycleBook(dx < 0 ? 1 : -1);
       }, { passive: true });
 
@@ -2273,7 +2543,10 @@
       });
 
       cards.forEach((card) => {
-        card.addEventListener("click", () => selectBook(card));
+        card.addEventListener("click", () => {
+          if (performance.now() < suppressClickUntil) return;
+          selectBook(card);
+        });
         card.addEventListener("pointerenter", () => card.dataset.hovered = "true");
         card.addEventListener("pointerleave", () => card.dataset.hovered = "false");
       });
@@ -2315,6 +2588,15 @@
 
       closeButton.addEventListener("click", closeDetail);
       menuButton.addEventListener("click", () => toggleMenu());
+
+      document.querySelectorAll("[data-axis-nav]").forEach((btn) => {
+        btn.addEventListener("click", (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          const dir = Number(btn.getAttribute("data-axis-nav")) || 1;
+          cycleBook(dir);
+        });
+      });
 
       saveButton.addEventListener("click", () => {
         const saved = saveButton.getAttribute("aria-pressed") !== "true";

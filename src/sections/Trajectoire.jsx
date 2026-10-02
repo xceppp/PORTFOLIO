@@ -1,208 +1,193 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import AnimatedContent from '../bits/AnimatedContent';
 import NavArrow from '../bits/NavArrow';
+import { useTheme } from '../hooks/useTheme';
 import { trajectoire } from '../content';
+
+const KoiStudies = lazy(() =>
+  import('../threeui/KoiStudies').then((m) => ({ default: m.KoiStudies })),
+);
 
 export default function Trajectoire() {
   const stops = useMemo(() => [...trajectoire.stations], []);
-  const [active, setActive] = useState(0);
-  const [open, setOpen] = useState(false);
-  const [windowStart, setWindowStart] = useState(0);
-  const [visibleCount, setVisibleCount] = useState(5);
-  const dialogRef = useRef(null);
-  const current = stops[active];
+  const { resolved } = useTheme();
+  const theme = resolved === 'light' ? 'light' : 'dark';
+  const stageRef = useRef(null);
+  const panelRef = useRef(null);
+  const [index, setIndex] = useState(0);
+  const [total, setTotal] = useState(stops.length);
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [logoBroken, setLogoBroken] = useState(false);
+  const current = stops[index] || stops[0];
 
   useEffect(() => {
-    const update = () => {
-      const w = window.innerWidth;
-      if (w <= 560) setVisibleCount(2);
-      else if (w <= 900) setVisibleCount(3);
-      else setVisibleCount(5);
-    };
-    update();
-    window.addEventListener('resize', update);
-    return () => window.removeEventListener('resize', update);
+    setLogoBroken(false);
+  }, [current?.logo]);
+
+  const onIndexChange = useCallback((nextIndex, nextTotal) => {
+    setIndex(nextIndex);
+    if (nextTotal) setTotal(nextTotal);
   }, []);
 
-  const shown = Math.min(visibleCount, stops.length);
-  const maxStart = Math.max(0, stops.length - shown);
+  const onOpenDetail = useCallback((nextIndex) => {
+    if (typeof nextIndex === 'number' && nextIndex >= 0) {
+      setIndex(nextIndex);
+    }
+    setDetailOpen(true);
+  }, []);
 
-  useEffect(() => {
-    setWindowStart((start) => Math.min(start, maxStart));
-  }, [maxStart]);
+  const closeDetail = useCallback(() => setDetailOpen(false), []);
 
-  const ensureVisible = (index) => {
-    setWindowStart((start) => {
-      if (index < start) return index;
-      if (index >= start + shown) return Math.min(maxStart, index - shown + 1);
-      return start;
-    });
-  };
-
-  const select = (index, showPanel = true) => {
-    const next = Math.max(0, Math.min(stops.length - 1, index));
-    setActive(next);
-    ensureVisible(next);
-    if (showPanel) setOpen(true);
-  };
-
-  const page = (dir) => {
-    const nextStart = Math.max(0, Math.min(maxStart, windowStart + dir * shown));
-    if (nextStart === windowStart) return;
-    setWindowStart(nextStart);
-    setActive(nextStart);
-  };
-
-  const openCurrent = () => {
-    select(active, true);
+  const go = (direction) => {
+    const host = stageRef.current?.querySelector('.koi-studies');
+    host?.__koiNavigate?.(direction);
   };
 
   useEffect(() => {
-    if (!open) return undefined;
+    if (!detailOpen) return undefined;
     const onKey = (e) => {
-      if (e.key === 'Escape') setOpen(false);
-      if (e.key === 'ArrowRight') {
-        e.preventDefault();
-        select(active + 1, true);
-      }
-      if (e.key === 'ArrowLeft') {
-        e.preventDefault();
-        select(active - 1, true);
-      }
+      if (e.key === 'Escape') closeDetail();
     };
-    document.body.style.overflow = 'hidden';
     window.addEventListener('keydown', onKey);
-    dialogRef.current?.focus();
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    panelRef.current?.focus();
     return () => {
-      document.body.style.overflow = '';
       window.removeEventListener('keydown', onKey);
+      document.body.style.overflow = prev;
     };
-  }, [open, active]);
-
-  const slice = stops.slice(windowStart, windowStart + shown);
-  const canPrev = windowStart > 0;
-  const canNext = windowStart < maxStart;
+  }, [detailOpen, closeDetail]);
 
   return (
-    <section id={trajectoire.id} className="section trajectoire trajectoire--line">
+    <section id={trajectoire.id} className="section trajectoire trajectoire--koi">
       <div className="shell">
         <AnimatedContent>
           <h2 className="section-title">{trajectoire.title}</h2>
+          <p className="section-subtitle trajectoire__subtitle">{trajectoire.subtitle}</p>
         </AnimatedContent>
 
-        <div className="line-map" aria-label="Ligne du parcours">
+        <div className="trajectoire-koi" ref={stageRef}>
           <NavArrow
             direction="prev"
-            className="line-map__arrow"
-            label="Segment précédent"
-            disabled={!canPrev}
-            onClick={() => page(-1)}
+            className="trajectoire-koi__arrow"
+            label="Étape précédente"
+            onClick={() => go('prev')}
           />
 
-          <div className="line-map__stage">
-            <div className="line-map__rail" aria-hidden="true" />
-            <ol className="line-map__stops">
-              {slice.map((stop, localIndex) => {
-                const i = windowStart + localIndex;
-                const selected = open && i === active;
-                return (
-                  <li key={stop.years + stop.role} className="line-map__stop">
-                    <button
-                      type="button"
-                      className={`line-map__btn ${selected ? 'is-active' : ''} ${
-                        stop.current ? 'is-current' : ''
-                      }`}
-                      aria-haspopup="dialog"
-                      aria-expanded={selected}
-                      onClick={() => select(i, true)}
-                    >
-                      <span className="line-map__title">{stop.role}</span>
-                      <span className="line-map__pin" aria-hidden="true" />
-                      <span className="line-map__date mono">{stop.years}</span>
-                    </button>
-                  </li>
-                );
-              })}
-            </ol>
+          <div className="trajectoire-koi__stage shader-frame">
+            <Suspense fallback={<div className="trajectoire-koi__fallback" aria-hidden="true" />}>
+              <KoiStudies
+                stations={stops}
+                theme={theme}
+                onIndexChange={onIndexChange}
+                onOpenDetail={onOpenDetail}
+              />
+            </Suspense>
           </div>
 
           <NavArrow
             direction="next"
-            className="line-map__arrow"
-            label="Segment suivant"
-            disabled={!canNext}
-            onClick={() => page(1)}
+            className="trajectoire-koi__arrow"
+            label="Étape suivante"
+            onClick={() => go('next')}
           />
         </div>
 
-        <div className="line-map__actions">
-          <button
-            type="button"
-            className="line-map__ouvrir"
-            onClick={openCurrent}
-            aria-haspopup="dialog"
-            aria-expanded={open}
-          >
-            Ouvrir
-          </button>
-        </div>
+        <button
+          type="button"
+          className="trajectoire-koi__meta trajectoire-koi__meta--btn"
+          onClick={() => setDetailOpen(true)}
+          aria-haspopup="dialog"
+          aria-expanded={detailOpen}
+        >
+          <p className="trajectoire-koi__count mono">
+            {index + 1} / {total}
+          </p>
+          <h3 className="trajectoire-koi__role">{current.role}</h3>
+          <p className="trajectoire-koi__place">
+            {current.place}
+            <span aria-hidden="true"> · </span>
+            {current.institution}
+          </p>
+          <p className="trajectoire-koi__years mono">{current.years}</p>
+          <p className="trajectoire-koi__detail">{current.detail}</p>
+          <span className="trajectoire-koi__meta-cta">Voir les détails</span>
+        </button>
       </div>
 
-      {open && (
+      {detailOpen ? (
         <div
-          className="line-map__overlay"
-          role="presentation"
-          onClick={() => setOpen(false)}
+          className="trajectoire-detail"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="trajectoire-detail-title"
+          onClick={closeDetail}
         >
           <div
-            ref={dialogRef}
-            className="line-map__modal"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="line-map-modal-title"
+            className="trajectoire-detail__panel"
+            ref={panelRef}
             tabIndex={-1}
             onClick={(e) => e.stopPropagation()}
           >
             <button
               type="button"
-              className="line-map__close"
+              className="trajectoire-detail__close"
+              onClick={closeDetail}
               aria-label="Fermer"
-              onClick={() => setOpen(false)}
             >
               ×
             </button>
-            <p className="line-map__details-date mono">{current.years}</p>
-            <h3 id="line-map-modal-title" className="line-map__details-role">
+            <div className="trajectoire-detail__logo-wrap">
+              {logoBroken ? (
+                <span className="trajectoire-detail__mark">
+                  {current.place || current.institution}
+                </span>
+              ) : (
+                <img
+                  key={current.logo}
+                  className="trajectoire-detail__logo"
+                  src={current.logo}
+                  alt={current.institution}
+                  width={240}
+                  height={64}
+                  loading="eager"
+                  decoding="async"
+                  onError={() => setLogoBroken(true)}
+                />
+              )}
+            </div>
+            <p className="trajectoire-detail__count mono">
+              {index + 1} / {total}
+            </p>
+            <h3 id="trajectoire-detail-title" className="trajectoire-detail__role">
               {current.role}
             </h3>
-            <p className="line-map__details-place">
+            <p className="trajectoire-detail__place">
               {current.place}
               <span aria-hidden="true"> · </span>
               {current.institution}
             </p>
-            <p className="line-map__details-body">{current.detail}</p>
-            <div className="line-map__modal-nav">
-              <NavArrow
-                direction="prev"
-                className="line-map__modal-arrow"
-                label="Étape précédente"
-                disabled={active === 0}
-                onClick={() => select(active - 1, true)}
-              />
-              <span className="line-map__modal-count mono">
-                {active + 1} / {stops.length}
-              </span>
-              <NavArrow
-                direction="next"
-                className="line-map__modal-arrow"
-                label="Étape suivante"
-                disabled={active === stops.length - 1}
-                onClick={() => select(active + 1, true)}
-              />
+            <p className="trajectoire-detail__years mono">{current.years}</p>
+            <p className="trajectoire-detail__body">{current.detail}</p>
+            <div className="trajectoire-detail__nav">
+              <button
+                type="button"
+                className="trajectoire-detail__nav-btn"
+                onClick={() => go('prev')}
+              >
+                Précédent
+              </button>
+              <button
+                type="button"
+                className="trajectoire-detail__nav-btn trajectoire-detail__nav-btn--primary"
+                onClick={() => go('next')}
+              >
+                Suivant
+              </button>
             </div>
           </div>
         </div>
-      )}
+      ) : null}
     </section>
   );
 }

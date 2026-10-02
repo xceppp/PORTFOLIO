@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import DecodeCycle from '../bits/DecodeCycle';
 import HeroName from '../bits/HeroName';
+import MetalCta from '../bits/MetalCta';
 import { usePrefersReducedMotion } from '../hooks/useTheme';
 import { hero } from '../content';
 
@@ -35,9 +36,7 @@ export default function Hero() {
         </div>
 
         <div className="hero__actions">
-          <a className="btn btn--primary" href={hero.ctaPrimaryHref}>
-            {hero.ctaPrimary}
-          </a>
+          <MetalCta label={hero.ctaPrimary} href={hero.ctaPrimaryHref} />
           <a className="text-link" href={hero.ctaSecondaryHref}>
             {hero.ctaSecondary}
           </a>

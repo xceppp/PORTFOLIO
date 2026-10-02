@@ -1,5 +1,6 @@
 import { Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react';
 import DecryptedText from '../bits/DecryptedText';
+import MetalCta from '../bits/MetalCta';
 import NavArrow from '../bits/NavArrow';
 import { useInView } from '../hooks/useInView';
 import { usePrefersReducedMotion, useTheme } from '../hooks/useTheme';
@@ -143,10 +144,7 @@ export default function Production() {
           </div>
 
           <div className="production__paper-actions">
-            <button type="button" className="btn btn--primary" onClick={openDoi}>
-              Ouvrir le DOI
-              <ExternalHint />
-            </button>
+            <MetalCta label="Ouvrir le DOI" onClick={openDoi} ariaLabel="Ouvrir le DOI" />
             <p className="production__paper-title">{article.title}</p>
           </div>
 

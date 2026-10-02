@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import DecryptedText from '../bits/DecryptedText';
+import MetalCta from '../bits/MetalCta';
 import { a11y, contact, contacts } from '../content';
 
 function ExternalHint() {
@@ -24,12 +25,11 @@ export default function Contact() {
       <div className="shell blueprint-section contact__inner">
         <h2 className="section-title contact__title">{contact.title}</h2>
         <div className="contact__actions">
-          <a className="btn btn--primary" href={`mailto:${contacts.email}`}>
-            {contact.writeEmail}
-          </a>
-          <button type="button" className="btn btn--secondary" onClick={copyEmail}>
-            {copied ? contact.copied : contact.copyEmail}
-          </button>
+          <MetalCta label={contact.writeEmail} href={`mailto:${contacts.email}`} />
+          <MetalCta
+            label={copied ? contact.copied : contact.copyEmail}
+            onClick={copyEmail}
+          />
         </div>
 
         <ul className="contact__profiles">

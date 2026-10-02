@@ -77,26 +77,62 @@ export function buildArticlePaperDocument(baseHtml, article, theme = 'dark') {
     theme === 'light' ? 'color:rgba(22,24,27,.06);' : 'color:rgba(236,236,234,.07);',
   );
 
-  // Stage chrome for light / dark host theme
+  // Stage chrome: transparent host plate — only floating paper + year wordmark
   if (theme === 'light') {
     html = html.replace(
       ':root{ --bg:#08080a; --ink:#f2f2f0; --dim:rgba(242,242,240,.38); }',
-      ':root{ --bg:#f4f5f3; --ink:#16181b; --dim:rgba(22,24,27,.48); }',
-    );
-    html = html.replace(
-      'html,body{height:100%;background:var(--bg);overflow:hidden;',
-      'html,body{height:100%;background:#f4f5f3;overflow:hidden;',
+      ':root{ --bg:transparent; --ink:#16181b; --dim:rgba(22,24,27,.48); }',
     );
   } else {
     html = html.replace(
       ':root{ --bg:#08080a; --ink:#f2f2f0; --dim:rgba(242,242,240,.38); }',
-      ':root{ --bg:#15171a; --ink:#ececea; --dim:rgba(236,236,234,.42); }',
-    );
-    html = html.replace(
-      'html,body{height:100%;background:var(--bg);overflow:hidden;',
-      'html,body{height:100%;background:#15171a;overflow:hidden;',
+      ':root{ --bg:transparent; --ink:#ececea; --dim:rgba(236,236,234,.42); }',
     );
   }
+  html = html.replace(
+    'html,body{height:100%;background:var(--bg);overflow:hidden;',
+    'html,body{height:100%;background:transparent;overflow:hidden;',
+  );
+  if (!html.includes('chalh-paper-float')) {
+    html = html.replace(
+      '</style>',
+      `/* chalh-paper-float */
+  html,body,#bg{background:transparent!important}
+  #dof,#vig,#grain,#grain2{display:none!important;opacity:0!important}
+  #hint{color:${theme === 'light' ? 'rgba(22,24,27,.45)' : 'rgba(236,236,234,.38)'}!important}
+  #hint b{color:${theme === 'light' ? 'rgba(22,24,27,.72)' : 'rgba(236,236,234,.62)'}!important}
+</style>`,
+    );
+  }
+  // Drop the dark rectangular halo plane behind the sheet
+  html = html.replace(
+    'halo.position.z = -0.62; group.add(halo);',
+    'halo.position.z = -0.62; /* chalh: no rectangular halo plate */',
+  );
+  // Transparent GL clear — no opaque canvas plate around the sheet
+  html = html.replace(
+    'const renderer = new T.WebGLRenderer({canvas, antialias:true, alpha:true,\n                                      powerPreference:\'high-performance\'});',
+    `const renderer = new T.WebGLRenderer({canvas, antialias:true, alpha:true, premultipliedAlpha:true,
+                                      powerPreference:'high-performance'});
+renderer.setClearColor(0x000000, 0);`,
+  );
+  // Remove certificate double-border “square sides”; keep editorial + year only
+  html = html.replace(
+    `  ctx.strokeStyle='rgba(255,255,255,.34)'; ctx.lineWidth=2;
+  rr(ctx,20,20,1160,1616,14); ctx.stroke();
+  ctx.strokeStyle='rgba(255,255,255,.12)'; ctx.lineWidth=1;
+  rr(ctx,36,36,1128,1584,10); ctx.stroke();`,
+    `  /* chalh: no square frame strokes on the floating sheet */`,
+  );
+  // Soften the sheet so it reads as glass, not a white rectangle plate
+  html = html.replace(
+    'map: tex, color: new T.Color(0xc4d2e8), side: T.DoubleSide, metalness: 0.0,',
+    'map: tex, color: new T.Color(0xe8eef6), side: T.DoubleSide, metalness: 0.0,',
+  );
+  html = html.replace(
+    'transparent: true, alphaTest: 0.012, opacity: 1',
+    'transparent: true, alphaTest: 0.012, opacity: 0.92',
+  );
 
   // Stronger frost plate behind body type so long titles stay legible
   html = html.replace(
