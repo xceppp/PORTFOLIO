@@ -72,7 +72,7 @@ export default function Transmission() {
             <div>
               <p className="pfe-schema__kicker mono">ENCADREMENT · 2011–2022</p>
               <DecodeOnView
-                text="projets de fin d'études encadrés"
+                text="Projets de fin d'études encadrés"
                 className="pfe-schema__label"
                 as="h3"
                 delay={80}

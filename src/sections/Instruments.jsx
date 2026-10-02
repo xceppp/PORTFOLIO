@@ -61,7 +61,23 @@ export default function Instruments() {
                   as="p"
                   delay={180 + i * 90}
                 />
-                <p className="stats__detail">{item.detail}</p>
+                {item.logos?.length ? (
+                  <div className="stats__logos" aria-label={item.detail}>
+                    {item.logos.map((src) => (
+                      <img
+                        key={src}
+                        className="stats__logo"
+                        src={src}
+                        alt=""
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    ))}
+                    <span className="visually-hidden">{item.detail}</span>
+                  </div>
+                ) : (
+                  <p className="stats__detail">{item.detail}</p>
+                )}
               </div>
             </li>
           ))}

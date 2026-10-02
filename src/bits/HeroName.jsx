@@ -18,17 +18,12 @@ function smoothScrollTo(y, duration = SCROLL_DOWN_MS) {
 
   const prevBehavior = document.documentElement.style.scrollBehavior;
   document.documentElement.style.scrollBehavior = 'auto';
-  document.documentElement.dataset.autoScrolling = '1';
 
   let raf = 0;
   const start = performance.now();
 
   const finish = () => {
     document.documentElement.style.scrollBehavior = prevBehavior;
-    delete document.documentElement.dataset.autoScrolling;
-    window.dispatchEvent(
-      new CustomEvent('scroll-gate-to', { detail: { id: 'manifeste' } }),
-    );
   };
 
   const tick = (now) => {

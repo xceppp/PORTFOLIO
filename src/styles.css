@@ -1218,7 +1218,7 @@ html[data-theme='light'] .logo-band__logo {
   opacity: 0.88;
 }
 
-/* ENSA etc. — white plate: invert + screen so the block doesn’t stay dark */
+/* ENSA — white plate: screen on dark, multiply on light (no black block) */
 .logo-band__item.tone-light .logo-band__logo {
   filter: invert(1) grayscale(1) brightness(1.75) contrast(1.15);
   mix-blend-mode: screen;
@@ -1226,9 +1226,9 @@ html[data-theme='light'] .logo-band__logo {
 }
 
 html[data-theme='light'] .logo-band__item.tone-light .logo-band__logo {
-  filter: grayscale(1) brightness(0.14) contrast(1.3);
+  filter: grayscale(1) contrast(1.08) brightness(1.02);
   mix-blend-mode: multiply;
-  opacity: 0.92;
+  opacity: 0.9;
 }
 
 .logo-band__item.tone-light:hover .logo-band__logo {
@@ -1237,8 +1237,9 @@ html[data-theme='light'] .logo-band__item.tone-light .logo-band__logo {
 }
 
 html[data-theme='light'] .logo-band__item.tone-light:hover .logo-band__logo {
-  filter: grayscale(1) brightness(0.1) contrast(1.35);
+  filter: grayscale(1) contrast(1.12) brightness(1);
   mix-blend-mode: multiply;
+  opacity: 1;
 }
 
 /* UMI·EST pair: mono, shared midline via flex */
@@ -1398,13 +1399,46 @@ html[data-theme='light'] .logo-band__item.is-pair:hover .logo-band__logo {
   transition-delay: calc(0.28s + var(--stat-i, 0) * 70ms);
 }
 
-.instruments.is-live .stats__detail {
+.stats__logos {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.55rem 0.75rem;
+  margin-top: 0.45rem;
+  min-height: 22px;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 0.4s ease, transform 0.4s ease;
+  transition-delay: calc(0.28s + var(--stat-i, 0) * 70ms);
+}
+
+.stats__logo {
+  display: block;
+  height: 18px;
+  width: auto;
+  max-width: 72px;
+  object-fit: contain;
+  filter: grayscale(1) invert(1) brightness(1.45) contrast(0.95);
+  opacity: 0.88;
+}
+
+html[data-theme='light'] .stats__logo {
+  filter: grayscale(1) brightness(0.16) contrast(1.25);
+  opacity: 0.9;
+}
+
+.instruments.is-live .stats__detail,
+.instruments.is-live .stats__logos {
   opacity: 1;
   transform: none;
 }
 
 .stats__item:hover .stats__detail {
   color: var(--teal);
+}
+
+.stats__item:hover .stats__logo {
+  opacity: 1;
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -120,12 +120,19 @@ export const establishments = [
 export const instruments = {
   title: 'Repères',
   items: [
-    { numeric: 15, prefix: '+', suffix: '', label: 'ans d\'enseignement supérieur', detail: 'France et Maroc' },
-    { numeric: 84, prefix: '', suffix: '', label: 'travaux recensés sur ORCID', detail: 'Automatique, systèmes, énergie' },
-    { numeric: 6, prefix: '', suffix: '', label: 'thèses soutenues', detail: '2018–2024' },
-    { numeric: 79, prefix: '', suffix: '', label: 'projets de fin d\'études encadrés', detail: '2011–2022' },
-    { numeric: 4, prefix: '', suffix: '', label: 'projets structurants', detail: 'Mandat EST de Meknès' },
-    { numeric: 4, prefix: '', suffix: '', label: 'partenariats de coopération', detail: 'CNAM, ULCO, ENSIM et al.' },
+    { numeric: 15, prefix: '+', suffix: '', label: 'Ans d\'enseignement supérieur', detail: 'France et Maroc' },
+    { numeric: 84, prefix: '', suffix: '', label: 'Travaux recensés sur ORCID', detail: 'Automatique, systèmes, énergie' },
+    { numeric: 6, prefix: '', suffix: '', label: 'Thèses soutenues', detail: '2018–2024' },
+    { numeric: 79, prefix: '', suffix: '', label: 'Projets de fin d\'études encadrés', detail: '2011–2022' },
+    { numeric: 4, prefix: '', suffix: '', label: 'Projets structurants', detail: 'Mandat EST de Meknès', logos: ['/logos/est-mark.png'] },
+    {
+      numeric: 4,
+      prefix: '',
+      suffix: '',
+      label: 'Partenariats de coopération',
+      detail: 'CNAM, ULCO, ENSIM',
+      logos: ['/logos/cnam.svg', '/logos/ulco.svg', '/logos/ensim.svg'],
+    },
   ],
 };
 

@@ -1,5 +1,4 @@
 import { useTheme } from './hooks/useTheme';
-import useSectionScrollGate from './hooks/useSectionScrollGate';
 import { a11y } from './content';
 import AnnouncementBar from './sections/AnnouncementBar';
 import Nav from './sections/Nav';
@@ -18,7 +17,6 @@ import './styles.css';
 
 export default function App() {
   const { preference, setPreference, resolved } = useTheme();
-  useSectionScrollGate();
 
   return (
     <>
