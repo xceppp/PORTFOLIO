@@ -5,7 +5,7 @@ import { usePrefersReducedMotion } from '../hooks/useTheme';
 import { transmission } from '../content';
 
 export default function Transmission() {
-  const { pfe, theses, teaching, interventions } = transmission;
+  const { pfe, theses, teaching, interventionsLabel, interventions } = transmission;
   const reduced = usePrefersReducedMotion();
   const sectionRef = useRef(null);
   const [live, setLive] = useState(reduced);
@@ -33,6 +33,14 @@ export default function Transmission() {
     observer.observe(el);
     return () => observer.disconnect();
   }, [reduced]);
+
+  useEffect(() => {
+    if (reduced || !live || teaching.length < 2) return undefined;
+    const id = window.setInterval(() => {
+      setActiveTeach((i) => (i + 1) % teaching.length);
+    }, 3000);
+    return () => window.clearInterval(id);
+  }, [reduced, live, teaching.length, activeTeach]);
 
   return (
     <section
@@ -65,7 +73,26 @@ export default function Transmission() {
           </article>
         </div>
 
-        <p className="transmission__interventions">{interventions}</p>
+        <div className="tx-interventions" aria-label={interventionsLabel}>
+          <p className="tx-interventions__label">{interventionsLabel}</p>
+          <ul className="tx-interventions__logos">
+            {interventions.map((item) => (
+              <li
+                key={item.name}
+                className={`tx-interventions__item tone-${item.tone || 'plate'}`}
+                title={item.name}
+              >
+                <img
+                  className="tx-interventions__logo"
+                  src={item.logo}
+                  alt={item.name}
+                  loading="lazy"
+                  decoding="async"
+                />
+              </li>
+            ))}
+          </ul>
+        </div>
 
         <div className="pfe-schema" aria-label="Projets de fin d'études encadrés">
           <header className="pfe-schema__head">

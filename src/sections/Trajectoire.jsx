@@ -182,22 +182,23 @@ export default function Trajectoire() {
             </p>
             <p className="line-map__details-body">{current.detail}</p>
             <div className="line-map__modal-nav">
-              <button
-                type="button"
-                className="btn btn--secondary btn--sm"
+              <NavArrow
+                direction="prev"
+                className="line-map__modal-arrow"
+                label="Étape précédente"
                 disabled={active === 0}
                 onClick={() => select(active - 1, true)}
-              >
-                Précédent
-              </button>
-              <button
-                type="button"
-                className="btn btn--secondary btn--sm"
+              />
+              <span className="line-map__modal-count mono">
+                {active + 1} / {stops.length}
+              </span>
+              <NavArrow
+                direction="next"
+                className="line-map__modal-arrow"
+                label="Étape suivante"
                 disabled={active === stops.length - 1}
                 onClick={() => select(active + 1, true)}
-              >
-                Suivant
-              </button>
+              />
             </div>
           </div>
         </div>

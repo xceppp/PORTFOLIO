@@ -96,7 +96,7 @@ export const manifeste = {
 };
 
 /**
- * Same order as Trajectoire stops (first appearance, newest → oldest).
+ * Passing logo band — first appearance, newest → oldest.
  * Real logos in /public/logos (rendered monochrome).
  */
 export const establishments = [
@@ -104,17 +104,16 @@ export const establishments = [
     id: 'umi-est',
     name: 'Université Moulay Ismaïl · EST de Meknès',
     logo: '/logos/umi-est.png',
-    logos: ['/logos/umi-mark.png', '/logos/est-mark.png'],
     wide: true,
   },
-  { id: 'ensa', name: 'ENSA Fès', logo: '/logos/ensa.png', tone: 'light' },
+  { id: 'ensa', name: 'ENSA Fès', logo: '/logos/ensa.png' },
   { id: 'usmba', name: 'Université Sidi Mohamed Ben Abdellah', logo: '/logos/usmba.png' },
-  { id: 'lisa', name: 'Laboratoire LISA', logo: '/logos/lisa.png' },
   { id: 'psa', name: 'PSA Paris-Saclay', logo: '/logos/psa.svg' },
-  { id: 'dijon', name: 'Université de Dijon', logo: '/logos/bourgogne.svg' },
   { id: 'utc', name: 'Université de technologie de Compiègne', logo: '/logos/utc.svg' },
+  { id: 'dijon', name: 'Université de Dijon', logo: '/logos/bourgogne.svg' },
   { id: 'ecl', name: 'École Centrale de Lille', logo: '/logos/centrale.png' },
   { id: 'lille', name: 'Université de Lille', logo: '/logos/lille.svg' },
+  { id: 'fst', name: 'FST de Fès', logo: '/logos/fst.png' },
 ];
 
 export const instruments = {
@@ -302,7 +301,12 @@ export const transmission = {
       body: 'Coordination du programme Bac+5 Management Industriel et Ingénierie. Expertise des projets de formation continue à l\'USMBA (2018–2020), auto-évaluation des filières et préparation des accréditations.',
     },
   ],
-  interventions: 'Interventions : ENSA Fès, ENCG, FST, EuroMed, ESI2A.',
+  interventionsLabel: 'Interventions',
+  interventions: [
+    { name: 'ENCG', logo: '/logos/encg.png' },
+    { name: 'EuroMed', logo: '/logos/euromed.png' },
+    { name: 'ESI2A', logo: '/logos/esi2a.png' },
+  ],
   pfe: {
     total: 79,
     segments: [
