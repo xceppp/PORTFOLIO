@@ -148,9 +148,11 @@ export default function Nav({ preference, setPreference, resolved }) {
   }, [mobileOpen]);
 
   useEffect(() => {
-    document.body.style.overflow = mobileOpen ? 'hidden' : '';
+    document.documentElement.classList.toggle('nav-menu-open', mobileOpen);
+    document.body.classList.toggle('nav-menu-open', mobileOpen);
     return () => {
-      document.body.style.overflow = '';
+      document.documentElement.classList.remove('nav-menu-open');
+      document.body.classList.remove('nav-menu-open');
     };
   }, [mobileOpen]);
 

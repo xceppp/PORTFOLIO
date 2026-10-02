@@ -49,12 +49,13 @@ export default function Trajectoire() {
       if (e.key === 'Escape') closeDetail();
     };
     window.addEventListener('keydown', onKey);
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
+    document.documentElement.classList.add('trajectoire-detail-open');
+    document.body.classList.add('trajectoire-detail-open');
     panelRef.current?.focus();
     return () => {
       window.removeEventListener('keydown', onKey);
-      document.body.style.overflow = prev;
+      document.documentElement.classList.remove('trajectoire-detail-open');
+      document.body.classList.remove('trajectoire-detail-open');
     };
   }, [detailOpen, closeDetail]);
 

@@ -23,7 +23,18 @@ export default function Production() {
   const touchX = useRef(null);
   const timer = useRef(0);
   const sectionRef = useRef(null);
-  const inView = useInView(sectionRef, { rootMargin: '120px 0px' });
+  const inView = useInView(sectionRef, { rootMargin: '900px 0px' });
+  const [activated, setActivated] = useState(false);
+
+  useEffect(() => {
+    if (inView) setActivated(true);
+  }, [inView]);
+
+  // Warm the paper early so dark-theme WebGL is ready before the section lands
+  useEffect(() => {
+    const id = window.setTimeout(() => setActivated(true), 1200);
+    return () => window.clearTimeout(id);
+  }, []);
 
   const article = publications[index];
 
@@ -129,7 +140,7 @@ export default function Production() {
                     variant="original"
                     article={article}
                     theme={resolved === 'light' ? 'light' : 'dark'}
-                    active={inView}
+                    active={activated}
                   />
                 </Suspense>
               )}

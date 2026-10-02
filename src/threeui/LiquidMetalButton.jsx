@@ -72,12 +72,18 @@ function stageBackground(theme, embedded) {
       #191b21 0%, #0e0f13 34%, #050506 62%, #000 88%) #000`;
 }
 
-function buildPillDocument(theme, embedded) {
+function buildPillDocument(theme, embedded, label = 'Sign up') {
   let html = originalSource;
   const bg = stageBackground(theme, embedded);
+  const safeLabel = String(label || 'Sign up').slice(0, 24);
   html = html.replace(
     /background:\s*radial-gradient\(46vmax 32vmax at 50% 47%,\s*#191b21 0%, #0e0f13 34%, #050506 62%, #000 88%\) #000;/,
     `background: ${bg};`,
+  );
+  // Bake label into srcDoc so CTAs never flash the default "Sign up"
+  html = html.replace(
+    /<span class="lbl">Sign up<\/span>/,
+    `<span class="lbl">${safeLabel.replace(/</g, '&lt;')}</span>`,
   );
   if (embedded) {
     html = html
@@ -95,7 +101,7 @@ function buildPillDocument(theme, embedded) {
     overflow:hidden!important;
   }
   .stage{
-    --h: 48px;
+    --h: 30px;
     --pad: 0px;
     --bw: 100%;
     --bh: 100%;
@@ -117,6 +123,11 @@ function buildPillDocument(theme, embedded) {
   .btn{
     width: 100% !important;
     height: 100% !important;
+  }
+  .lbl{
+    font-size: 12px !important;
+    letter-spacing: 0.01em !important;
+    padding: 0 0.75em !important;
   }
   #fx{
     border-radius: 999px !important;
@@ -171,7 +182,10 @@ export function LiquidMetalButton({
   const shape = variant === 'pill' ? 'pill' : 'pill';
   const label = String(text ?? 'Sign up').slice(0, 24);
   const pillWidthUnits = Math.min(3000, Math.max(1407, 820 + label.length * 94));
-  const srcDoc = useMemo(() => buildPillDocument(theme, embedded), [theme, embedded]);
+  const srcDoc = useMemo(
+    () => buildPillDocument(theme, embedded, label),
+    [theme, embedded, label],
+  );
   const canvas = embedded ? 'transparent' : theme === 'light' ? '#f4f5f3' : '#070708';
 
   const pushConfig = useCallback(() => {

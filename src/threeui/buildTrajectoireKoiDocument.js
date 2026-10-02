@@ -173,30 +173,19 @@ function injectDeckLogic(html, stations, theme) {
       const trajectoireDrawFallbackMark = (card) => {
         const ctx = card.context;
         const label = String(card.shell?.dataset?.name || "CHALH").toUpperCase();
-        const plateW = WIDTH * 0.62;
-        const plateH = HEIGHT * 0.28;
-        const px = (WIDTH - plateW) / 2;
-        const py = (HEIGHT - plateH) / 2 - HEIGHT * 0.02;
-        ctx.fillStyle = TRAJECTOIRE_LIGHT ? "#f7f8f6" : "#ececea";
-        ctx.beginPath();
-        const rx = 16;
-        ctx.moveTo(px + rx, py);
-        ctx.arcTo(px + plateW, py, px + plateW, py + plateH, rx);
-        ctx.arcTo(px + plateW, py + plateH, px, py + plateH, rx);
-        ctx.arcTo(px, py + plateH, px, py, rx);
-        ctx.arcTo(px, py, px + plateW, py, rx);
-        ctx.closePath();
-        ctx.fill();
-        ctx.fillStyle = "#1a1d21";
-        ctx.font = "700 42px Arial, Helvetica, sans-serif";
+        ctx.fillStyle = TRAJECTOIRE_LIGHT ? "rgba(22,24,27,0.82)" : "rgba(236,236,234,0.88)";
+        ctx.font = "700 48px Arial, Helvetica, sans-serif";
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
-        ctx.fillText(label.slice(0, 18), WIDTH / 2, HEIGHT / 2 - HEIGHT * 0.02);
+        ctx.fillText(label.slice(0, 18), WIDTH / 2, HEIGHT / 2 - HEIGHT * 0.04);
       };
+
+      const trajectoireFieldFill = () =>
+        TRAJECTOIRE_LIGHT ? "#f4f5f3" : "#15171a";
 
       const trajectoireDrawLogo = (card) => {
         const ctx = card.context;
-        ctx.fillStyle = card.panelColor;
+        ctx.fillStyle = trajectoireFieldFill();
         ctx.fillRect(0, 0, WIDTH, HEIGHT);
         if (!card.imageReady) return;
         if (!card.imageUsable) {
@@ -210,41 +199,28 @@ function injectDeckLogic(html, stations, theme) {
           trajectoireDrawFallbackMark(card);
           return;
         }
-        // Theme-matched logo: large contain fit on a light plate
-        const padX = WIDTH * 0.12;
-        const padY = HEIGHT * 0.12;
+        // Match .logo-band__logo: mono invert/black, large contain, no plate
+        const padX = WIDTH * 0.08;
+        const padY = HEIGHT * 0.1;
         const maxW = WIDTH - padX * 2;
         const maxH = HEIGHT - padY * 2;
         const ratio = iw / ih;
         let dw = maxW;
         let dh = dw / ratio;
-        if (dh > maxH * 0.85) {
-          dh = maxH * 0.85;
+        if (dh > maxH) {
+          dh = maxH;
           dw = dh * ratio;
         }
         const dx = (WIDTH - dw) / 2;
-        const dy = (HEIGHT - dh) / 2 - HEIGHT * 0.01;
-        const platePadX = Math.max(18, dw * 0.08);
-        const platePadY = Math.max(12, dh * 0.14);
+        const dy = (HEIGHT - dh) / 2 - HEIGHT * 0.045;
         ctx.save();
-        ctx.fillStyle = TRAJECTOIRE_LIGHT ? "#f0f1ef" : "#e6e4dc";
-        const rx = 14;
-        const px = dx - platePadX;
-        const py = dy - platePadY;
-        const pw = dw + platePadX * 2;
-        const ph = dh + platePadY * 2;
-        ctx.beginPath();
-        ctx.moveTo(px + rx, py);
-        ctx.arcTo(px + pw, py, px + pw, py + ph, rx);
-        ctx.arcTo(px + pw, py + ph, px, py + ph, rx);
-        ctx.arcTo(px, py + ph, px, py, rx);
-        ctx.arcTo(px, py, px + pw, py, rx);
-        ctx.closePath();
-        ctx.fill();
-        ctx.strokeStyle = "rgba(140,106,46,0.22)";
-        ctx.lineWidth = 1.25;
-        ctx.stroke();
+        ctx.globalAlpha = TRAJECTOIRE_LIGHT ? 0.78 : 0.86;
+        ctx.filter = TRAJECTOIRE_LIGHT
+          ? "brightness(0)"
+          : "brightness(0) invert(1)";
         ctx.drawImage(img, dx, dy, dw, dh);
+        ctx.filter = "none";
+        ctx.globalAlpha = 1;
         ctx.restore();
       };
 
@@ -527,10 +503,39 @@ export function buildTrajectoireKoiDocument(originalHtml, stations, theme = 'dar
 
   html = html.replace(
     '</style>',
-    `/* chalh trajectoire clarity */
+    `/* chalh trajectoire — bigger swipe cards, clear stop titles, no square plate */
     #fluid-pastels-background { display: none !important; }
+    html, body {
+      background: var(--field) !important;
+    }
+    .stack-scene {
+      width: min(96vw, 94vh) !important;
+      max-width: 100% !important;
+      transform: scale(1.08);
+      transform-origin: center center;
+    }
+    @media (max-width: 720px) {
+      .stack-scene {
+        width: min(98vw, 86vh) !important;
+        transform: scale(1.14);
+      }
+    }
+    .image-field {
+      background: transparent !important;
+    }
+    .artwork {
+      border-radius: 1.6cqw !important;
+      box-shadow:
+        0 3.4cqw 8cqw rgb(0 0 0 / 0.28) !important;
+      outline: none !important;
+      border: 0 !important;
+    }
+    .artwork::before,
+    .artwork::after {
+      display: none !important;
+    }
     .hanko span {
-      font-size: 1.55cqw;
+      font-size: 2.05cqw;
       font-weight: 700;
       letter-spacing: 0.04em;
       line-height: 1;
@@ -538,24 +543,27 @@ export function buildTrajectoireKoiDocument(originalHtml, stations, theme = 'dar
       font-family: "Geist", Inter, ui-sans-serif, system-ui, sans-serif;
     }
     .wordmark {
-      max-width: 48cqw;
+      max-width: 58cqw;
       overflow: hidden;
       text-overflow: ellipsis;
       font-family: "Geist", Inter, ui-sans-serif, system-ui, sans-serif !important;
       font-style: normal !important;
-      font-weight: 650 !important;
+      font-weight: 700 !important;
+      font-size: clamp(2.7cqw, 3.35cqw, 3.9cqw) !important;
       letter-spacing: -0.02em !important;
     }
     .copy {
       font-family: "Geist", Inter, ui-sans-serif, system-ui, sans-serif !important;
       font-style: normal !important;
-      font-size: clamp(1.85cqw, 2.25cqw, 2.55cqw) !important;
-      font-weight: 550 !important;
-      letter-spacing: -0.025em !important;
-      line-height: 1.18 !important;
+      font-size: clamp(2.85cqw, 3.5cqw, 4.1cqw) !important;
+      font-weight: 650 !important;
+      letter-spacing: -0.028em !important;
+      line-height: 1.14 !important;
     }
     .copy-panel {
-      box-shadow: inset 0 1px color-mix(in srgb, var(--ink) 10%, transparent);
+      box-shadow: none !important;
+      padding-block: 1.35cqw !important;
+      background: color-mix(in srgb, var(--panel) 92%, transparent) !important;
     }
     .stack-shell {
       cursor: pointer;

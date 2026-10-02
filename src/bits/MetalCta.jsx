@@ -64,7 +64,10 @@ export default function MetalCta({
     <div
       className={`metal-cta shader-frame ${className}`.trim()}
       data-theme={theme}
-      style={{ '--metal-cta-chars': Math.max(8, text.length) }}
+      style={{
+        '--metal-cta-chars': Math.max(6, text.length),
+        width: `calc(1.35rem + ${Math.max(6, text.length)} * 0.46rem)`,
+      }}
     >
       <Suspense fallback={<span className="metal-cta__fallback">{label}</span>}>
         <LiquidMetalButton

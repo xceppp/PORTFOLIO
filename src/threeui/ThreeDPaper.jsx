@@ -17,7 +17,8 @@ export function ThreeDPaper({
   active = true,
 }) {
   const hostRef = useRef(null);
-  const inView = useInView(hostRef, { rootMargin: '220px 0px' });
+  // once: true — latch visibility so scroll jitter doesn't tear down WebGL
+  const inView = useInView(hostRef, { rootMargin: '480px 0px', once: true });
   const [documentVisible, setDocumentVisible] = useState(
     () => typeof document === 'undefined' || !document.hidden,
   );
@@ -29,7 +30,8 @@ export function ThreeDPaper({
       ? buildArticlePaperDocument(originalSource, article, theme)
       : originalSource);
 
-  const frameKey = `${theme}::${article?.doi || 'default'}`;
+  // Include a build stamp so theme/srcDoc patches remount after HMR
+  const frameKey = `${theme}::${article?.doi || 'default'}::v3`;
   const [front, setFront] = useState(null);
   const [back, setBack] = useState(null);
 
@@ -40,6 +42,7 @@ export function ThreeDPaper({
     return () => document.removeEventListener('visibilitychange', update);
   }, []);
 
+  // Parent `active` (Production activated) keeps the scene mounted after first sight
   const live = active && inView && documentVisible;
 
   useEffect(() => {
@@ -61,15 +64,16 @@ export function ThreeDPaper({
     return () => window.clearTimeout(id);
   }, [live, frameKey, srcDoc, article?.title, front]);
 
-  // Unmount WebGL when far off-screen to free GPU
+  // Only tear down when parent deactivates or tab is hidden — not on scroll leave
   useEffect(() => {
     if (live) return undefined;
+    if (active && inView) return undefined;
     const id = window.setTimeout(() => {
       setFront(null);
       setBack(null);
-    }, 400);
+    }, 1800);
     return () => window.clearTimeout(id);
-  }, [live]);
+  }, [live, active, inView]);
 
   const markReady = (key) => {
     setFront((prev) => {

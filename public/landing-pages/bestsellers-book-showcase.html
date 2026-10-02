@@ -1827,118 +1827,127 @@
 
 
     
-    /* CHALH mobile — list all three books; swipe after open */
-    @media (max-width: 900px) {
-      [data-mode="gallery"] .gallery {
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        gap: 0 !important;
-        padding: 0 4vw !important;
-      }
+    /* CHALH embed — hide duplicate topbar (site nav owns chrome) */
+    .topbar {
+      display: none !important;
+    }
 
-      [data-mode="gallery"] .book-card[data-book="codex"],
-      [data-mode="gallery"] .book-card[data-book="claude"],
-      [data-mode="gallery"] .book-card[data-book="cursor"] {
-        position: relative !important;
-        left: auto !important;
-        top: auto !important;
-        width: min(28vw, 118px) !important;
-        height: auto !important;
-        aspect-ratio: 0.68 !important;
+    .stage {
+      padding-top: 0 !important;
+    }
+
+    .icon-button {
+      width: 36px !important;
+      height: 36px !important;
+      border-radius: 10px !important;
+    }
+
+    .ticket-button,
+    .action-rail .pill,
+    .pill {
+      min-height: 34px !important;
+      font-size: 13px !important;
+      padding-inline: 0.85rem !important;
+    }
+
+    .pill.icon-only {
+      width: 34px !important;
+      height: 34px !important;
+      min-height: 34px !important;
+    }
+
+    /* CHALH — fan gallery (middle up, sides angled) + clean detail */
+    @media (max-width: 900px) {
+      [data-mode="gallery"] .book-card:not(.is-focus) {
         opacity: 1 !important;
         pointer-events: auto !important;
-        transform: none !important;
-        --r: 0deg !important;
-        --yaw: 0deg !important;
-        --hover-y: 0px !important;
-        --local-x: 0px !important;
-        --local-y: 0px !important;
-        margin: 0 1.5vw !important;
-        z-index: 2 !important;
-        transition: transform 220ms ease, filter 220ms ease !important;
       }
 
-      [data-mode="gallery"] .book-card.is-focus,
-      [data-mode="gallery"] .book-card[data-hovered="true"] {
-        transform: translateY(-8px) scale(1.04) !important;
-        z-index: 4 !important;
-        filter: drop-shadow(0 14px 22px rgba(0, 0, 0, 0.35));
-      }
-
-      [data-mode="gallery"] .book-card .cover-title {
-        font-size: clamp(14px, 3.8vw, 18px) !important;
-      }
-
-      [data-mode="gallery"] .book-card .cover-subtitle,
-      [data-mode="gallery"] .book-card .cover-kicker,
-      [data-mode="gallery"] .book-card .cover-footer {
-        font-size: clamp(8px, 2.2vw, 11px) !important;
-      }
-
-      [data-mode="gallery"] .book-card .open-badge {
-        font-size: 10px !important;
-      }
-
-      [data-mode="detail"] .book-card[data-book="codex"],
-      [data-mode="detail"] .book-card[data-book="claude"],
-      [data-mode="detail"] .book-card[data-book="cursor"] {
-        position: absolute !important;
-        left: 50% !important;
-        top: 18% !important;
-        width: min(46vw, 200px) !important;
-        opacity: 0 !important;
-        pointer-events: none !important;
-        transform: translate3d(-50%, -50%, 0) scale(0.92) !important;
-        z-index: 1 !important;
-      }
-
-      [data-mode="detail"] .book-card.is-focus,
-      [data-mode="detail"] .book-card.selected {
+      [data-mode="gallery"] .book-card[data-book="codex"] {
+        left: 22% !important;
+        top: 50% !important;
+        width: min(44vw, 210px) !important;
+        --r: -12deg !important;
+        --yaw: -10deg !important;
         opacity: 1 !important;
-        pointer-events: none !important;
-        transform: translate3d(-50%, -50%, 0) scale(1) !important;
-        z-index: 8 !important;
+        pointer-events: auto !important;
+        z-index: 2 !important;
+        transform: translate3d(calc(-50% + var(--local-x)), calc(var(--hover-y) + var(--local-y)), 0)
+          rotate(var(--r)) rotateY(var(--yaw)) !important;
+      }
+
+      [data-mode="gallery"] .book-card[data-book="claude"] {
+        left: 50% !important;
+        top: 36% !important;
+        width: min(52vw, 248px) !important;
+        --r: 0.5deg !important;
+        --yaw: -2deg !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
+        z-index: 4 !important;
+        transform: translate3d(calc(-50% + var(--local-x)), calc(var(--hover-y) + var(--local-y)), 0)
+          rotate(var(--r)) rotateY(var(--yaw)) !important;
+      }
+
+      [data-mode="gallery"] .book-card[data-book="cursor"] {
+        left: 78% !important;
+        top: 50% !important;
+        width: min(44vw, 210px) !important;
+        --r: 12deg !important;
+        --yaw: 10deg !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
+        z-index: 2 !important;
+        transform: translate3d(calc(-50% + var(--local-x)), calc(var(--hover-y) + var(--local-y)), 0)
+          rotate(var(--r)) rotateY(var(--yaw)) !important;
       }
 
       [data-mode="gallery"] .hero-word {
         opacity: 0.08 !important;
       }
 
-      /* swipe hint under the three books */
       [data-mode="gallery"] .gallery::after {
         content: "Touchez un livre · glissez pour changer";
         position: absolute;
         left: 50%;
-        bottom: 12%;
+        bottom: 10%;
         transform: translateX(-50%);
         width: max-content;
-        max-width: 90%;
+        max-width: 92%;
         color: var(--muted);
         font-size: 11px;
         letter-spacing: 0.08em;
         text-transform: uppercase;
         pointer-events: none;
-        opacity: 0.78;
+        opacity: 0.75;
       }
-    }
 
-    /* CHALH mobile detail + swipe affordance */
-    @media (max-width: 900px) {
+      /* Detail: selected book pops forward; others fade */
       [data-mode="detail"] .stage {
         min-height: 100% !important;
         height: 100% !important;
         overflow: hidden !important;
       }
 
-      [data-mode="detail"] .gallery {
-        min-height: 100%;
+      [data-mode="detail"] .book-card[data-book="codex"],
+      [data-mode="detail"] .book-card[data-book="claude"],
+      [data-mode="detail"] .book-card[data-book="cursor"] {
+        left: 50% !important;
+        top: 16% !important;
+        width: min(40vw, 168px) !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+        --r: 0deg !important;
+        --yaw: 0deg !important;
+        transform: translate3d(-50%, -50%, 0) scale(0.9) !important;
+        z-index: 1 !important;
+        transition: opacity 280ms ease, transform 340ms ease !important;
       }
 
+      [data-mode="detail"] .book-card.is-focus,
       [data-mode="detail"] .book-card.selected {
-        left: 50% !important;
-        top: 18% !important;
-        width: min(46vw, 200px) !important;
+        opacity: 1 !important;
+        transform: translate3d(-50%, -50%, 0) scale(1.05) !important;
         z-index: 8 !important;
       }
 
@@ -1949,33 +1958,35 @@
         left: 0 !important;
         bottom: 0 !important;
         width: 100% !important;
-        height: min(62svh, 520px) !important;
-        max-height: 62svh !important;
-        padding: 18px 18px 96px !important;
+        height: min(54svh, 440px) !important;
+        max-height: 54svh !important;
+        padding: 14px 16px 72px !important;
         opacity: 1 !important;
         transform: none !important;
         pointer-events: auto !important;
         z-index: 20 !important;
         overflow: hidden !important;
-        background: color-mix(in srgb, var(--canvas) 92%, var(--surface)) !important;
-        box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.28) !important;
+        background: color-mix(in srgb, var(--canvas) 94%, var(--surface)) !important;
+        box-shadow: 0 -10px 36px rgba(0, 0, 0, 0.3) !important;
+        border-radius: 16px 16px 0 0 !important;
       }
 
       html[data-theme="light"] [data-mode="detail"] .detail-panel {
-        background: color-mix(in srgb, #ffffff 90%, var(--canvas)) !important;
+        background: color-mix(in srgb, #ffffff 92%, var(--canvas)) !important;
       }
 
       [data-mode="detail"] .detail-title {
-        font-size: clamp(28px, 7vw, 40px) !important;
-        margin-bottom: 0.35rem !important;
+        font-size: clamp(24px, 6.2vw, 34px) !important;
+        margin-bottom: 0.3rem !important;
+        font-weight: 650 !important;
       }
 
       [data-mode="detail"] .detail-scroll {
-        max-height: calc(62svh - 170px) !important;
+        max-height: calc(54svh - 130px) !important;
         overflow-y: auto !important;
         -webkit-overflow-scrolling: touch;
         overscroll-behavior: contain;
-        padding-right: 8px !important;
+        padding-right: 6px !important;
       }
 
       [data-mode="detail"] .bottom-dock {
@@ -1986,27 +1997,37 @@
         width: auto !important;
       }
 
+      /* Clean detail: hide chrome clutter, keep axis arrows */
+      [data-mode="detail"] .action-rail,
+      [data-mode="detail"] .meta-row,
+      [data-mode="detail"] .detail-rule,
+      [data-mode="detail"] .stars {
+        display: none !important;
+      }
+
       .axis-nav {
         display: flex;
-        gap: 0.5rem;
-        margin: 0 0 0.55rem;
+        gap: 0.45rem;
+        margin: 0;
       }
 
       .axis-nav__btn {
         flex: 1;
         justify-content: center;
+        min-height: 34px;
+        font-size: 13px !important;
+        font-weight: 550 !important;
       }
 
       [data-mode="detail"] .close-button {
-        top: 12px !important;
-        right: 12px !important;
+        top: 10px !important;
+        right: 10px !important;
         z-index: 30 !important;
+        width: 36px !important;
+        height: 36px !important;
       }
 
-      .gallery {
-        touch-action: pan-x pan-y;
-      }
-
+      .gallery,
       .stage {
         touch-action: pan-x pan-y;
       }
@@ -2019,6 +2040,120 @@
     @media (max-width: 900px) {
       [data-mode="detail"] .axis-nav {
         display: flex;
+      }
+    }
+
+    /* Desktop detail also gets clean nav arrows */
+    @media (min-width: 901px) {
+      [data-mode="detail"] .axis-nav {
+        display: flex;
+        gap: 0.5rem;
+        margin: 0 0 0.65rem;
+      }
+      [data-mode="detail"] .action-rail .pill:not(.language):not(.icon-only) {
+        display: none;
+      }
+    }
+
+    /* CHALH — three-book fan (gallery) + clean detail pop-out */
+    [data-mode="gallery"] .book-card {
+      opacity: 1 !important;
+      pointer-events: auto !important;
+    }
+
+    @media (min-width: 901px) {
+      [data-mode="gallery"] .book-card[data-book="codex"] {
+        left: 20.5% !important;
+        top: 39% !important;
+        width: min(27vw, 390px) !important;
+        --r: -12deg !important;
+        --yaw: -10deg !important;
+        z-index: 2 !important;
+      }
+
+      [data-mode="gallery"] .book-card[data-book="claude"] {
+        left: 50% !important;
+        top: 28% !important;
+        width: min(30vw, 440px) !important;
+        --r: 0.5deg !important;
+        --yaw: -4deg !important;
+        z-index: 4 !important;
+      }
+
+      [data-mode="gallery"] .book-card[data-book="cursor"] {
+        left: 79.5% !important;
+        top: 40% !important;
+        width: min(27vw, 390px) !important;
+        --r: 12deg !important;
+        --yaw: 10deg !important;
+        z-index: 2 !important;
+      }
+
+      [data-mode="gallery"] .hero-word {
+        opacity: 0.1 !important;
+      }
+
+      [data-mode="detail"] .stage {
+        overflow: hidden !important;
+      }
+
+      [data-mode="detail"] .book-card:not(.selected) {
+        opacity: 0 !important;
+        filter: blur(8px) !important;
+        pointer-events: none !important;
+      }
+
+      [data-mode="detail"] .book-card.selected {
+        left: 22% !important;
+        top: 46% !important;
+        width: min(28vw, 400px) !important;
+        transform: translate3d(-50%, -50%, 0) rotate(-4deg) scale(1.04) !important;
+        z-index: 14 !important;
+        pointer-events: none !important;
+      }
+
+      [data-mode="detail"] .detail-panel {
+        top: 8% !important;
+        right: 2.5% !important;
+        width: min(46%, 620px) !important;
+        max-height: calc(100% - 10%) !important;
+        padding: clamp(18px, 2vw, 28px) clamp(18px, 2.2vw, 32px) 1.25rem !important;
+        border-radius: 14px !important;
+        background: color-mix(in srgb, var(--canvas) 90%, var(--surface)) !important;
+        box-shadow: 0 18px 48px rgba(0, 0, 0, 0.22) !important;
+      }
+
+      html[data-theme="light"] [data-mode="detail"] .detail-panel {
+        background: color-mix(in srgb, #ffffff 88%, var(--canvas)) !important;
+      }
+
+      [data-mode="detail"] .detail-scroll {
+        max-height: min(52vh, 520px) !important;
+        padding-bottom: 1rem !important;
+        -webkit-mask-image: none !important;
+        mask-image: none !important;
+      }
+
+      [data-mode="detail"] .close-button {
+        left: auto !important;
+        right: calc(2.5% + 10px) !important;
+        top: 8.5% !important;
+        transform: none !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
+        z-index: 24 !important;
+      }
+
+      [data-mode="detail"] .action-rail,
+      [data-mode="detail"] .meta-row,
+      [data-mode="detail"] .detail-rule,
+      [data-mode="detail"] .stars {
+        display: none !important;
+      }
+
+      [data-mode="detail"] .bottom-dock {
+        position: relative !important;
+        margin-top: 0.75rem !important;
       }
     }
 
@@ -2462,11 +2597,17 @@
       function setFocusIndex(next) {
         focusIndex = (next + bookOrder.length) % bookOrder.length;
         const id = bookOrder[focusIndex];
+        const carouselGallery = window.innerWidth <= 900 && body.dataset.mode === "gallery";
         cards.forEach((card) => {
           const on = card.dataset.book === id;
           card.classList.toggle("is-focus", on);
-          card.dataset.hovered = on ? "true" : "false";
-          card.tabIndex = on ? 0 : -1;
+          if (carouselGallery) {
+            card.dataset.hovered = on ? "true" : "false";
+            card.tabIndex = on ? 0 : -1;
+          } else if (body.dataset.mode === "gallery") {
+            card.removeAttribute("data-hovered");
+            card.tabIndex = 0;
+          }
         });
       }
 

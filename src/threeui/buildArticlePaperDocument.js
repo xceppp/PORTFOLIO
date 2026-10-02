@@ -74,7 +74,7 @@ export function buildArticlePaperDocument(baseHtml, article, theme = 'dark') {
   // Soften giant wordmark so certificate copy stays primary
   html = html.replace(
     'color:rgba(242,242,240,.125);',
-    theme === 'light' ? 'color:rgba(22,24,27,.06);' : 'color:rgba(236,236,234,.07);',
+    theme === 'light' ? 'color:rgba(22,24,27,.06);' : 'color:rgba(236,236,234,.12);',
   );
 
   // Stage chrome: transparent host plate — only floating paper + year wordmark
@@ -116,6 +116,13 @@ export function buildArticlePaperDocument(baseHtml, article, theme = 'dark') {
                                       powerPreference:'high-performance'});
 renderer.setClearColor(0x000000, 0);`,
   );
+  // Dark theme: brighter lights so the sheet reads on black hosts
+  if (theme !== 'light') {
+    html = html.replace(
+      'const key  = new T.DirectionalLight(0xfff6ec, 1.42); key.position.set(-3.3,2.1,2.0);\nconst fill = new T.DirectionalLight(0x9fb6ff, 0.13); fill.position.set(3.6,-1.8,1.6);\nconst rim  = new T.DirectionalLight(0xffffff, 0.10); rim.position.set(1.6,1.2,-2.6);\nscene.add(key,fill,rim,new T.AmbientLight(0xffffff,0.16));',
+      'const key  = new T.DirectionalLight(0xfff6ec, 2.35); key.position.set(-3.3,2.1,2.0);\nconst fill = new T.DirectionalLight(0x9fb6ff, 0.55); fill.position.set(3.6,-1.8,1.6);\nconst rim  = new T.DirectionalLight(0xffffff, 0.4); rim.position.set(1.6,1.2,-2.6);\nscene.add(key,fill,rim,new T.AmbientLight(0xffffff,0.58));',
+    );
+  }
   // Remove certificate double-border “square sides”; keep editorial + year only
   html = html.replace(
     `  ctx.strokeStyle='rgba(255,255,255,.34)'; ctx.lineWidth=2;
@@ -124,39 +131,67 @@ renderer.setClearColor(0x000000, 0);`,
   rr(ctx,36,36,1128,1584,10); ctx.stroke();`,
     `  /* chalh: no square frame strokes on the floating sheet */`,
   );
-  // Soften the sheet so it reads as glass, not a white rectangle plate
+  // Sheet tint: light stays cool glass; dark stays luminous so it reads on black
   html = html.replace(
     'map: tex, color: new T.Color(0xc4d2e8), side: T.DoubleSide, metalness: 0.0,',
-    'map: tex, color: new T.Color(0xe8eef6), side: T.DoubleSide, metalness: 0.0,',
+    theme === 'light'
+      ? 'map: tex, color: new T.Color(0xe8eef6), side: T.DoubleSide, metalness: 0.0,'
+      : 'map: tex, color: new T.Color(0xe4eaf4), side: T.DoubleSide, metalness: 0.02,',
   );
   html = html.replace(
     'transparent: true, alphaTest: 0.012, opacity: 1',
-    'transparent: true, alphaTest: 0.012, opacity: 0.92',
+    theme === 'light'
+      ? 'transparent: true, alphaTest: 0.012, opacity: 0.94'
+      : 'transparent: true, alphaTest: 0.004, opacity: 1',
   );
 
-  // Stronger frost plate behind body type so long titles stay legible
+  // Sheet body fill — dark needs near-opaque plate or it vanishes on black hosts
+  html = html.replace(
+    "ctx.fillStyle='rgba(255,255,255,.030)'; ctx.fillRect(0,0,1200,1656);",
+    theme === 'light'
+      ? "ctx.fillStyle='rgba(248,249,250,.42)'; ctx.fillRect(0,0,1200,1656);"
+      : "ctx.fillStyle='rgba(244,246,250,.98)'; ctx.fillRect(0,0,1200,1656);",
+  );
+
+  // Dark: shader outA was ~0.15 over black — floor alpha so the sheet actually reads
+  if (theme !== 'light') {
+    html = html.replace(
+      `float baseA = diffuseColor.a / max(opacity, 1e-4);
+      float outA  = clamp(baseA + fres*uRimA
+                        + uSpecA*dot(outgoingLight, vec3(0.3333)), 0.0, 1.0) * opacity;`,
+      `float baseA = max(diffuseColor.a / max(opacity, 1e-4), 0.96);
+      float outA  = clamp(baseA + fres*uRimA
+                        + uSpecA*dot(outgoingLight, vec3(0.3333)), 0.0, 1.0) * opacity;`,
+    );
+  }
+
+  // Frost: light keeps soft plate; dark uses stronger frost so the sheet reads on black
   html = html.replace(
     "fr.addColorStop(0,'rgba(255,255,255,0)');   fr.addColorStop(.26,'rgba(255,255,255,.060)');\n  fr.addColorStop(.74,'rgba(255,255,255,.060)'); fr.addColorStop(1,'rgba(255,255,255,0)');",
     theme === 'light'
       ? "fr.addColorStop(0,'rgba(244,245,243,0)');   fr.addColorStop(.22,'rgba(244,245,243,.22)');\n  fr.addColorStop(.78,'rgba(244,245,243,.22)'); fr.addColorStop(1,'rgba(244,245,243,0)');"
-      : "fr.addColorStop(0,'rgba(21,23,26,0)');   fr.addColorStop(.22,'rgba(21,23,26,.28)');\n  fr.addColorStop(.78,'rgba(21,23,26,.28)'); fr.addColorStop(1,'rgba(21,23,26,0)');",
+      : "fr.addColorStop(0,'rgba(236,236,234,0)');   fr.addColorStop(.18,'rgba(236,236,234,.28)');\n  fr.addColorStop(.82,'rgba(236,236,234,.28)'); fr.addColorStop(1,'rgba(236,236,234,0)');",
   );
 
-  // Replace the main editorial block with wrapped, readable article copy
+  // Ink: both themes use dark type on a luminous sheet (sheet must read on black hosts)
+  const ink = "'#0f1113'";
+  const ink78 = "'rgba(15,17,19,.78)'";
+  const ink62 = "'rgba(15,17,19,.62)'";
+  const ink92 = "'rgba(15,17,19,.92)'";
   const editorial = [
-    `  ctx.fillStyle=${theme === 'light' ? "'#0f1113'" : "'#ffffff'"}; ctx.font='700 88px "Inter Tight", Inter, sans-serif';`,
+    `  ctx.fillStyle=${ink}; ctx.font='700 88px "Inter Tight", Inter, sans-serif';`,
     `  ctx.fillText(${esc(`${year || '·'}.`)}, M, 168);`,
     ``,
     `  ctx.font='600 46px "Inter Tight", Inter, sans-serif';`,
-    `  ctx.fillStyle=${theme === 'light' ? "'rgba(15,17,19,.78)'" : "'rgba(255,255,255,.82)'"};`,
+    `  ctx.fillStyle=${ink78};`,
     `  ${JSON.stringify(journalLines)}.forEach((s,i)=>ctx.fillText(s, M, 286+i*54));`,
     `  ctx.font='500 38px "Inter Tight", Inter, sans-serif';`,
-    `  ctx.fillStyle=${theme === 'light' ? "'rgba(15,17,19,.62)'" : "'rgba(255,255,255,.66)'"};`,
+    `  ctx.fillStyle=${ink62};`,
     `  ctx.fillText(${esc(year)}, M, 286+${journalLines.length}*54+16);`,
-    `  ctx.font='600 50px "Inter Tight", Inter, sans-serif'; ctx.fillStyle=${theme === 'light' ? "'#0f1113'" : "'#ffffff'"};`,
+    `  ctx.font='600 50px "Inter Tight", Inter, sans-serif'; ctx.fillStyle=${ink};`,
     `  ${JSON.stringify(titleLines)}.forEach((s,i)=>ctx.fillText(s, M, 430+i*58));`,
     ``,
-    `  ctx.font='600 30px Inter, sans-serif'; ctx.fillStyle=${theme === 'light' ? "'rgba(15,17,19,.92)'" : "'rgba(255,255,255,.94)'"};`,
+    `  ctx.font='600 30px Inter, sans-serif'; ctx.fillStyle=${ink92};`,
     `  ${JSON.stringify(lines)}.forEach((s,i)=>{ if(!s) return; ctx.fillText(s, M+4, ${authorsY}+i*40); });`,
   ].join('\n');
 
@@ -193,8 +228,8 @@ renderer.setClearColor(0x000000, 0);`,
     `ctx.fillText(${esc(' works')}, M+w, 1516);`,
   );
 
-  // Light theme: invert remaining certificate paints (borders / side copy / footer)
-  if (theme === 'light') {
+  // Both themes: dark ink on luminous sheet (footer / side / certificate paints)
+  {
     const paintStart = html.indexOf('function drawGlass(ctx){');
     const paintEnd = html.indexOf('function makeCertTexture()', paintStart);
     if (paintStart !== -1 && paintEnd !== -1) {
@@ -207,18 +242,6 @@ renderer.setClearColor(0x000000, 0);`,
       paint = paint.replaceAll('rgba(255,255,255,.62)', 'rgba(15,17,19,.66)');
       paint = paint.replaceAll("strokeStyle='rgba(255,255,255,.34)'", "strokeStyle='rgba(15,17,19,.40)'");
       paint = paint.replaceAll("strokeStyle='rgba(255,255,255,.12)'", "strokeStyle='rgba(15,17,19,.18)'");
-      // Keep glass body whisper translucent (already patched frost above)
-      html = html.slice(0, paintStart) + paint + html.slice(paintEnd);
-    }
-  } else {
-    // Dark: push body copy closer to solid white for clarity
-    const paintStart = html.indexOf('function drawGlass(ctx){');
-    const paintEnd = html.indexOf('function makeCertTexture()', paintStart);
-    if (paintStart !== -1 && paintEnd !== -1) {
-      let paint = html.slice(paintStart, paintEnd);
-      paint = paint.replaceAll('rgba(255,255,255,.52)', 'rgba(255,255,255,.78)');
-      paint = paint.replaceAll('rgba(255,255,255,.68)', 'rgba(255,255,255,.84)');
-      paint = paint.replaceAll('rgba(255,255,255,.62)', 'rgba(255,255,255,.80)');
       html = html.slice(0, paintStart) + paint + html.slice(paintEnd);
     }
   }

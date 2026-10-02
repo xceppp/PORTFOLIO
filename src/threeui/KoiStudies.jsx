@@ -40,12 +40,17 @@ export function KoiStudies({
   const frameRef = useRef(null);
   const inView = useInView(hostRef, { rootMargin: '280px 0px', once: true });
   const [ready, setReady] = useState(false);
-  const canvas = theme === 'light' ? '#f4f5f3' : '#10100e';
 
   const resolvedStations = useMemo(() => {
     if (!stations?.length) return null;
     return withAbsoluteLogos(stations);
   }, [stations]);
+
+  const canvas = resolvedStations?.length
+    ? 'transparent'
+    : theme === 'light'
+      ? '#f4f5f3'
+      : '#10100e';
 
   const srcDoc = useMemo(() => {
     if (!resolvedStations?.length) return null;
