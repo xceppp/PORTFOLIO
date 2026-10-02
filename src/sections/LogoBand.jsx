@@ -9,7 +9,7 @@ function LogoItem({ name, logo, wide }) {
       <img
         className="logo-band__logo"
         src={logo}
-        alt={name}
+        alt=""
         loading="eager"
         decoding="async"
         draggable={false}
@@ -18,22 +18,32 @@ function LogoItem({ name, logo, wide }) {
   );
 }
 
+function LogoGroup({ items, ariaHidden = false }) {
+  return (
+    <div className="logo-band__group" aria-hidden={ariaHidden || undefined}>
+      {items.map((item) => (
+        <LogoItem
+          key={item.id}
+          name={item.name}
+          logo={item.logo}
+          wide={item.wide}
+        />
+      ))}
+    </div>
+  );
+}
+
 export default function LogoBand() {
   const reduced = usePrefersReducedMotion();
-  const loop = [...establishments, ...establishments];
+  /* Duplicate inside each half so the strip always wider than the viewport */
+  const sequence = [...establishments, ...establishments];
 
   return (
     <div className="logo-band" aria-label="Établissements du parcours">
       <div className={`logo-band__viewport ${reduced ? 'is-static' : ''}`}>
         <div className={`logo-band__track ${reduced ? '' : 'is-marquee'}`}>
-          {loop.map((item, i) => (
-            <LogoItem
-              key={`${item.id}-${i}`}
-              name={item.name}
-              logo={item.logo}
-              wide={item.wide}
-            />
-          ))}
+          <LogoGroup items={sequence} />
+          {!reduced ? <LogoGroup items={sequence} ariaHidden /> : null}
         </div>
       </div>
     </div>
