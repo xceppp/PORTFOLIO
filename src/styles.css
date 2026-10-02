@@ -3324,9 +3324,8 @@ html[data-theme='light'] .tx-interventions__item:hover .tx-interventions__logo {
   background: transparent;
 }
 
-/* Defer offscreen layout/paint work for heavy sections */
+/* Defer offscreen layout work — keep Pilotage out (mobile detail needs live layout) */
 .section.production,
-.section.pilotage,
 .section.systeme,
 .section.transmission {
   content-visibility: auto;
@@ -3337,12 +3336,9 @@ html[data-theme='light'] .tx-interventions__item:hover .tx-interventions__logo {
   min-height: min(78vh, 820px);
 }
 
-/* Throttle off-screen Pilotage WebGL/iframe work while scrolling elsewhere */
-.pilotage__stage[data-active='false'] iframe,
-.pilotage__stage[data-active='false'] .landing-page-frame,
-.pilotage__stage[data-active='false'] .threeui-background {
-  visibility: hidden;
-  pointer-events: none;
+.production__paper-stage,
+.production__paper-stage .three-d-paper {
+  background: var(--bg-100) !important;
 }
 
 .pilotage__fallback {
@@ -3386,8 +3382,15 @@ html[data-theme='light'] .tx-interventions__item:hover .tx-interventions__logo {
 @media (max-width: 900px) {
   .pilotage__stage {
     width: 100%;
-    height: min(85vh, 720px);
-    min-height: 480px;
+    height: min(88vh, 760px);
+    min-height: 560px;
+    overflow: hidden;
+  }
+
+  .pilotage__stage iframe,
+  .pilotage__stage .landing-page-frame,
+  .pilotage__stage .threeui-background {
+    touch-action: pan-y;
   }
 }
 

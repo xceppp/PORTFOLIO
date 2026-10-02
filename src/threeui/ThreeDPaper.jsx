@@ -5,8 +5,7 @@ import { useInView } from '../hooks/useInView';
 
 /**
  * Exact ThreeUI ThreeDPaper (original variant), adapted to accept article srcDoc.
- * Source revision SHA-256 8ec1b71c0dbc — canonical 3d-paper.html.
- * Mounts WebGL only while near the viewport to keep page scroll smooth.
+ * Double-buffers iframe swaps so article changes don't flash a blank plate.
  */
 export function ThreeDPaper({
   className = '',
@@ -18,12 +17,21 @@ export function ThreeDPaper({
   active = true,
 }) {
   const hostRef = useRef(null);
-  const inView = useInView(hostRef, { rootMargin: '180px 0px' });
+  const inView = useInView(hostRef, { rootMargin: '220px 0px' });
   const [documentVisible, setDocumentVisible] = useState(
     () => typeof document === 'undefined' || !document.hidden,
   );
-  const [ready, setReady] = useState(false);
-  const [displayDoc, setDisplayDoc] = useState(null);
+  const canvas = theme === 'light' ? '#f4f5f3' : '#15171a';
+
+  const srcDoc =
+    srcDocProp ||
+    (article
+      ? buildArticlePaperDocument(originalSource, article, theme)
+      : originalSource);
+
+  const frameKey = `${theme}::${article?.doi || 'default'}`;
+  const [front, setFront] = useState(null);
+  const [back, setBack] = useState(null);
 
   useEffect(() => {
     if (typeof document === 'undefined') return undefined;
@@ -32,25 +40,45 @@ export function ThreeDPaper({
     return () => document.removeEventListener('visibilitychange', update);
   }, []);
 
-  const srcDoc =
-    srcDocProp ||
-    (article
-      ? buildArticlePaperDocument(originalSource, article, theme)
-      : originalSource);
+  const live = active && inView && documentVisible;
 
-  // Defer srcDoc swap slightly so rapid carousel ticks don't thrash WebGL
   useEffect(() => {
-    if (!active || !inView || !documentVisible) return undefined;
-    const id = window.setTimeout(() => {
-      setDisplayDoc(srcDoc);
-      setReady(false);
-    }, 60);
-    return () => window.clearTimeout(id);
-  }, [srcDoc, active, inView, documentVisible]);
+    if (!live) return undefined;
 
-  const mounted = active && inView && documentVisible && Boolean(displayDoc);
-  const canvas = theme === 'light' ? '#f4f5f3' : '#15171a';
-  const iframeKey = `${theme}-${article?.doi || 'default'}`;
+    // Already showing this article/theme
+    if (front?.key === frameKey && front.srcDoc === srcDoc) return undefined;
+
+    const id = window.setTimeout(() => {
+      setBack(front && front.ready ? front : null);
+      setFront({
+        key: frameKey,
+        srcDoc,
+        title: article?.title || '3D Paper',
+        ready: false,
+      });
+    }, 40);
+
+    return () => window.clearTimeout(id);
+  }, [live, frameKey, srcDoc, article?.title, front]);
+
+  // Unmount WebGL when far off-screen to free GPU
+  useEffect(() => {
+    if (live) return undefined;
+    const id = window.setTimeout(() => {
+      setFront(null);
+      setBack(null);
+    }, 400);
+    return () => window.clearTimeout(id);
+  }, [live]);
+
+  const markReady = (key) => {
+    setFront((prev) => {
+      if (!prev || prev.key !== key) return prev;
+      return { ...prev, ready: true };
+    });
+    // Drop the previous frame after the new one is visible
+    window.setTimeout(() => setBack(null), 180);
+  };
 
   return (
     <div
@@ -58,7 +86,7 @@ export function ThreeDPaper({
       className={`threeui-background three-d-paper${className ? ` ${className}` : ''}`}
       role="group"
       aria-label="Interactive translucent 3D paper certificate"
-      data-state={!mounted ? 'paused' : ready ? 'ready' : 'loading'}
+      data-state={!live || !front ? 'paused' : front.ready ? 'ready' : 'loading'}
       data-theme={theme}
       style={{
         position: 'relative',
@@ -68,14 +96,14 @@ export function ThreeDPaper({
         ...style,
       }}
     >
-      {mounted ? (
+      {back ? (
         <iframe
-          key={iframeKey}
-          title={article?.title || '3D Paper'}
-          srcDoc={displayDoc}
+          key={`back-${back.key}`}
+          title=""
+          aria-hidden="true"
+          srcDoc={back.srcDoc}
           sandbox="allow-scripts allow-same-origin"
-          loading="lazy"
-          onLoad={() => setReady(true)}
+          tabIndex={-1}
           style={{
             position: 'absolute',
             inset: 0,
@@ -84,9 +112,33 @@ export function ThreeDPaper({
             height: '100%',
             border: 0,
             background: canvas,
-            opacity: ready ? 1 : 0,
-            pointerEvents: ready ? 'auto' : 'none',
-            transition: 'opacity 200ms ease-out',
+            opacity: 1,
+            pointerEvents: 'none',
+            zIndex: 1,
+          }}
+        />
+      ) : null}
+
+      {front ? (
+        <iframe
+          key={`front-${front.key}`}
+          title={front.title}
+          srcDoc={front.srcDoc}
+          sandbox="allow-scripts allow-same-origin"
+          loading="eager"
+          onLoad={() => markReady(front.key)}
+          style={{
+            position: 'absolute',
+            inset: 0,
+            display: 'block',
+            width: '100%',
+            height: '100%',
+            border: 0,
+            background: canvas,
+            opacity: front.ready || !back ? 1 : 0,
+            pointerEvents: front.ready ? 'auto' : 'none',
+            transition: 'opacity 160ms ease-out',
+            zIndex: 2,
           }}
         />
       ) : null}

@@ -32,14 +32,19 @@ export default function Pilotage() {
   const { resolved } = useTheme();
   const stageRef = useRef(null);
   const sectionRef = useRef(null);
-  const inView = useInView(sectionRef, { rootMargin: '280px 0px' });
+  const inView = useInView(sectionRef, { rootMargin: '480px 0px' });
   const [activated, setActivated] = useState(false);
   const brass = resolved === 'light' ? '#8c6a2e' : '#c29a5b';
 
-  // Keep showcase mounted after first visit so theme toggles stay cheap
+  // Mount once near viewport (or shortly after page load) and keep it
   useEffect(() => {
     if (inView) setActivated(true);
   }, [inView]);
+
+  useEffect(() => {
+    const id = window.setTimeout(() => setActivated(true), 1800);
+    return () => window.clearTimeout(id);
+  }, []);
 
   useEffect(() => {
     const root = stageRef.current;
