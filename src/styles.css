@@ -2903,6 +2903,172 @@ html[data-theme='light'] .tx-interventions__item:hover .tx-interventions__logo {
   color: var(--text-secondary);
 }
 
+/* Production — ThreeDPaper article stage */
+.production__paper {
+  margin-top: 0.25rem;
+}
+
+.production__paper-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+  margin-bottom: 0.85rem;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.production__paper-journal {
+  margin: 0;
+  text-align: right;
+  color: var(--text-secondary);
+  font-size: 13.5px;
+  max-width: min(56ch, 70%);
+}
+
+.production__paper-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.1rem;
+}
+
+.production__paper-arrow {
+  width: 48px;
+  height: 48px;
+  z-index: 2;
+}
+
+.production__paper-stage {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+  height: min(68vh, 640px);
+  min-height: 420px;
+  overflow: hidden;
+  background: var(--bg-100);
+  box-shadow: none;
+}
+
+.production__paper-stage.shader-frame,
+.production__paper-stage .threeui-background,
+.production__paper-stage .three-d-paper,
+.production__paper-stage iframe {
+  background: var(--bg-100) !important;
+  background-color: var(--bg-100) !important;
+  box-shadow: none !important;
+  border: 0 !important;
+  color-scheme: inherit;
+}
+
+.production__paper-stage .threeui-background,
+.production__paper-stage .three-d-paper {
+  width: 100%;
+  height: 100%;
+}
+
+.production__paper-loading,
+.production__paper-fallback {
+  width: 100%;
+  height: 100%;
+  min-height: inherit;
+  display: grid;
+  place-content: center;
+  gap: 0.55rem;
+  padding: 1.5rem;
+  text-align: center;
+  background: var(--bg-200);
+  color: inherit;
+  border: 0;
+  cursor: pointer;
+}
+
+.production__paper-fallback strong {
+  font-size: clamp(1.05rem, 2.4vw, 1.35rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.35;
+  max-width: 36ch;
+  margin-inline: auto;
+}
+
+.production__paper-fallback span {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+}
+
+.production__paper-actions {
+  display: grid;
+  gap: 0.65rem;
+  justify-items: start;
+  margin-bottom: 1rem;
+}
+
+.production__paper-title {
+  margin: 0;
+  max-width: 62ch;
+  color: var(--text-secondary);
+  font-size: 14.5px;
+  line-height: 1.45;
+}
+
+.production__paper-dots {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-bottom: 0.25rem;
+}
+
+.production__paper-dot {
+  appearance: none;
+  width: 8px;
+  height: 8px;
+  border: 0;
+  border-radius: 50%;
+  padding: 0;
+  background: var(--text-muted);
+  cursor: pointer;
+  opacity: 0.45;
+  transition: opacity 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.production__paper-dot.is-on {
+  background: var(--teal);
+  opacity: 1;
+  box-shadow: 0 0 8px color-mix(in srgb, var(--teal) 50%, transparent);
+}
+
+@media (max-width: 640px) {
+  .production__paper-row {
+    gap: 0.35rem;
+  }
+
+  .production__paper-arrow {
+    width: 40px;
+    height: 40px;
+  }
+
+  .production__paper-stage {
+    height: min(58vh, 520px);
+    min-height: 360px;
+  }
+
+  .production__paper-journal {
+    max-width: 58%;
+    font-size: 12.5px;
+  }
+
+  .production__paper-actions {
+    justify-items: stretch;
+  }
+
+  .production__paper-actions .btn {
+    width: 100%;
+  }
+}
+
 .paper-strip__meta {
   display: flex;
   justify-content: space-between;
@@ -3105,6 +3271,126 @@ html[data-theme='light'] .tx-interventions__item:hover .tx-interventions__logo {
 }
 
 /* Pilotage — clean tabs layout */
+.pilotage__stage {
+  position: relative;
+  width: min(1200px, calc(100% - 1.5rem));
+  margin: 0.5rem auto 0;
+  height: min(78vh, 820px);
+  min-height: 560px;
+  border-radius: 0;
+  overflow: visible;
+  box-shadow: none;
+  /* Match page so the iframe never flashes a white/black plate */
+  background: var(--bg-100);
+}
+
+.pilotage__stage.shader-frame,
+.pilotage__stage .landing-page-frame,
+.pilotage__stage .threeui-background,
+.pilotage__stage iframe {
+  background: var(--bg-100) !important;
+  background-color: var(--bg-100) !important;
+  box-shadow: none !important;
+  border: 0 !important;
+  color-scheme: inherit;
+}
+
+.pilotage__stage[data-pilotage-theme='dark'] iframe {
+  color-scheme: dark;
+}
+
+.pilotage__stage[data-pilotage-theme='light'] iframe {
+  color-scheme: light;
+}
+
+.pilotage__stage .landing-page-frame[data-state='loading'],
+.pilotage__stage .landing-page-frame[data-state='ready'] {
+  background: var(--bg-100) !important;
+}
+
+.pilotage__stage .landing-page-frame,
+.pilotage__stage .threeui-background {
+  width: 100%;
+  height: 100%;
+}
+
+.pilotage__stage-fallback {
+  width: 100%;
+  height: 100%;
+  background: transparent;
+}
+
+.section.pilotage {
+  background: transparent;
+}
+
+/* Defer offscreen layout/paint work for heavy sections */
+.section.production,
+.section.pilotage,
+.section.systeme,
+.section.transmission {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 720px;
+}
+
+.pilotage__stage[data-active='false'] {
+  min-height: min(78vh, 820px);
+}
+
+/* Throttle off-screen Pilotage WebGL/iframe work while scrolling elsewhere */
+.pilotage__stage[data-active='false'] iframe,
+.pilotage__stage[data-active='false'] .landing-page-frame,
+.pilotage__stage[data-active='false'] .threeui-background {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.pilotage__fallback {
+  display: grid;
+  gap: 1.25rem;
+  padding: 1.5rem 0 2rem;
+}
+
+.pilotage__fallback-card {
+  padding: 1rem 0;
+  border-top: 1px solid var(--ring);
+}
+
+.pilotage__fallback-card h3 {
+  margin: 0.35rem 0 0.75rem;
+  font-size: 1.35rem;
+}
+
+.pilotage__fallback-card ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.85rem;
+}
+
+.pilotage__fallback-card li {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.pilotage__fallback-card strong {
+  font-weight: 600;
+}
+
+.pilotage__fallback-card span {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+}
+
+@media (max-width: 900px) {
+  .pilotage__stage {
+    width: 100%;
+    height: min(85vh, 720px);
+    min-height: 480px;
+  }
+}
+
 .pilotage__lede {
   margin: -0.5rem 0 clamp(1.75rem, 3.5vw, 2.5rem);
   color: var(--text-secondary);

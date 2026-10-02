@@ -10,7 +10,7 @@ function LogoItem({ name, logo, wide }) {
         className="logo-band__logo"
         src={logo}
         alt=""
-        loading="eager"
+        loading="lazy"
         decoding="async"
         draggable={false}
       />

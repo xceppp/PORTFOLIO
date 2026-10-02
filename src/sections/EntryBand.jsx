@@ -1,43 +1,56 @@
-import { Suspense, lazy, useEffect, useRef } from 'react';
+import { Suspense, lazy, useEffect, useRef, useState } from 'react';
 import { usePrefersReducedMotion, useTheme } from '../hooks/useTheme';
 
 const PredictiveArcCanvas = lazy(() =>
   import('@designcodeio/threeui/components/PredictiveArcCanvas').then((m) => ({
     default: m.PredictiveArcCanvas,
-  }))
+  })),
 );
 
 /**
  * Entry band only: top bar → hero → announcement.
- * Halftone Flow (PredictiveArcCanvas) stays inside this block and scrolls away with it.
+ * Halftone Flow stays inside this block and unmounts once scrolled past.
  */
 export default function EntryBand({ children }) {
   const { resolved } = useTheme();
   const reduced = usePrefersReducedMotion();
   const bandRef = useRef(null);
+  const [past, setPast] = useState(false);
 
   useEffect(() => {
     const band = bandRef.current;
     if (!band) return undefined;
 
+    let ticking = false;
     const sync = () => {
       const bottom = band.getBoundingClientRect().bottom;
-      document.documentElement.classList.toggle('entry-band-past', bottom <= 60);
+      const nextPast = bottom <= 60;
+      setPast(nextPast);
+      document.documentElement.classList.toggle('entry-band-past', nextPast);
+      ticking = false;
+    };
+
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(sync);
     };
 
     sync();
-    window.addEventListener('scroll', sync, { passive: true });
-    window.addEventListener('resize', sync);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
     return () => {
-      window.removeEventListener('scroll', sync);
-      window.removeEventListener('resize', sync);
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onScroll);
       document.documentElement.classList.remove('entry-band-past');
     };
   }, []);
 
+  const showShader = !reduced && !past;
+
   return (
     <div className="entry-band" ref={bandRef}>
-      {!reduced && (
+      {showShader && (
         <div className="entry-band__bg" aria-hidden="true">
           <div className="shader-frame entry-band__frame">
             <Suspense fallback={null}>

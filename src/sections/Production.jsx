@@ -1,8 +1,13 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react';
 import DecryptedText from '../bits/DecryptedText';
 import NavArrow from '../bits/NavArrow';
-import { usePrefersReducedMotion } from '../hooks/useTheme';
+import { useInView } from '../hooks/useInView';
+import { usePrefersReducedMotion, useTheme } from '../hooks/useTheme';
 import { a11y, contacts, production } from '../content';
+
+const ThreeDPaper = lazy(() =>
+  import('../threeui/ThreeDPaper').then((m) => ({ default: m.ThreeDPaper })),
+);
 
 function ExternalHint() {
   return <span className="visually-hidden"> {a11y.newTab}</span>;
@@ -11,9 +16,15 @@ function ExternalHint() {
 export default function Production() {
   const { publications, shipped } = production;
   const reduced = usePrefersReducedMotion();
+  const { resolved } = useTheme();
   const [index, setIndex] = useState(0);
+  const [paused, setPaused] = useState(false);
   const touchX = useRef(null);
   const timer = useRef(0);
+  const sectionRef = useRef(null);
+  const inView = useInView(sectionRef, { rootMargin: '120px 0px' });
+
+  const article = publications[index];
 
   const go = useCallback(
     (dir) => {
@@ -22,11 +33,24 @@ export default function Production() {
     [publications.length],
   );
 
+  // Autoplay only while the section is on screen and the user isn't hovering
   useEffect(() => {
-    if (reduced) return undefined;
-    timer.current = window.setInterval(() => go(1), 5200);
+    if (reduced || paused || !inView) return undefined;
+    timer.current = window.setInterval(() => go(1), 9000);
     return () => window.clearInterval(timer.current);
-  }, [go, reduced]);
+  }, [go, reduced, index, paused, inView]);
+
+  useEffect(() => {
+    const onMessage = (event) => {
+      if (event.data?.type !== 'chalh-paper-open') return;
+      const doi = event.data.doi;
+      if (typeof doi === 'string' && doi.startsWith('http')) {
+        window.open(doi, '_blank', 'noopener,noreferrer');
+      }
+    };
+    window.addEventListener('message', onMessage);
+    return () => window.removeEventListener('message', onMessage);
+  }, []);
 
   const onTouchStart = (e) => {
     touchX.current = e.touches[0].clientX;
@@ -40,8 +64,12 @@ export default function Production() {
     go(dx < 0 ? 1 : -1);
   };
 
+  const openDoi = () => {
+    if (article?.doi) window.open(article.doi, '_blank', 'noopener,noreferrer');
+  };
+
   return (
-    <section id={production.id} className="section production">
+    <section id={production.id} className="section production" ref={sectionRef}>
       <div className="shell blueprint-section">
         <div className="production__header">
           <h2 className="section-title">{production.title}</h2>
@@ -58,80 +86,72 @@ export default function Production() {
           </a>
         </div>
 
-        <div className="paper-strip" aria-label="Publications">
-          <div className="paper-strip__meta">
+        <div
+          className="production__paper"
+          aria-label="Publications"
+          onTouchStart={onTouchStart}
+          onTouchEnd={onTouchEnd}
+          onMouseEnter={() => setPaused(true)}
+          onMouseLeave={() => setPaused(false)}
+          onFocusCapture={() => setPaused(true)}
+          onBlurCapture={(e) => {
+            if (!e.currentTarget.contains(e.relatedTarget)) setPaused(false);
+          }}
+        >
+          <div className="production__paper-meta">
             <p className="mono">
               {String(index + 1).padStart(2, '0')} /{' '}
               {String(publications.length).padStart(2, '0')}
             </p>
+            <p className="production__paper-journal">{article.journal}</p>
           </div>
 
-          <div className="paper-strip__row">
+          <div className="production__paper-row">
             <NavArrow
               direction="prev"
-              className="paper-strip__arrow"
+              className="production__paper-arrow"
               label="Publication précédente"
               onClick={() => go(-1)}
             />
 
-            <div
-              className="paper-strip__viewport"
-              onTouchStart={onTouchStart}
-              onTouchEnd={onTouchEnd}
-            >
-              <div
-                className={`paper-strip__track ${reduced ? 'is-static' : ''}`}
-                style={{ '--strip-i': index }}
-              >
-                {publications.map((item, i) => {
-                  const active = i === index;
-                  return (
-                    <article
-                      key={item.doi}
-                      className={`paper-strip__panel ${active ? 'is-active' : ''}`}
-                      aria-hidden={!active}
-                      onClick={() => {
-                        if (!active) setIndex(i);
-                      }}
-                    >
-                      <header className="paper-strip__top">
-                        <span className="paper-strip__mark" aria-hidden="true" />
-                        <span className="mono nums paper-strip__year">{item.year}</span>
-                        <span className="paper-strip__journal">{item.journal}</span>
-                      </header>
-                      <h3 className="paper-strip__title">{item.title}</h3>
-                      {item.authors && (
-                        <p className="paper-strip__authors">{item.authors}</p>
-                      )}
-                      <a
-                        href={item.doi}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="doi-link"
-                        tabIndex={active ? 0 : -1}
-                      >
-                        <DecryptedText
-                          text={item.doi.replace('https://doi.org/', 'doi:')}
-                          as="span"
-                        />
-                        <ExternalHint />
-                      </a>
-                    </article>
-                  );
-                })}
-              </div>
+            <div className="production__paper-stage shader-frame">
+              {reduced ? (
+                <button type="button" className="production__paper-fallback" onClick={openDoi}>
+                  <span className="mono nums">{article.year}</span>
+                  <strong>{article.title}</strong>
+                  <span>{article.journal}</span>
+                  <span className="doi-link">Ouvrir le DOI</span>
+                </button>
+              ) : (
+                <Suspense fallback={<div className="production__paper-loading" aria-hidden="true" />}>
+                  <ThreeDPaper
+                    variant="original"
+                    article={article}
+                    theme={resolved === 'light' ? 'light' : 'dark'}
+                    active={inView}
+                  />
+                </Suspense>
+              )}
             </div>
 
             <NavArrow
               direction="next"
-              className="paper-strip__arrow"
+              className="production__paper-arrow"
               label="Publication suivante"
               onClick={() => go(1)}
             />
           </div>
 
+          <div className="production__paper-actions">
+            <button type="button" className="btn btn--primary" onClick={openDoi}>
+              Ouvrir le DOI
+              <ExternalHint />
+            </button>
+            <p className="production__paper-title">{article.title}</p>
+          </div>
+
           <div
-            className="paper-strip__dots"
+            className="production__paper-dots"
             role="tablist"
             aria-label="Choisir une publication"
           >
@@ -141,8 +161,8 @@ export default function Production() {
                 type="button"
                 role="tab"
                 aria-selected={i === index}
-                aria-label={`Publication ${i + 1}`}
-                className={`paper-strip__dot ${i === index ? 'is-on' : ''}`}
+                aria-label={`Publication ${i + 1}: ${item.title}`}
+                className={`production__paper-dot ${i === index ? 'is-on' : ''}`}
                 onClick={() => setIndex(i)}
               />
             ))}

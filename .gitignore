@@ -22,3 +22,10 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Local verify artifacts / source dumps
+_shots/
+verify-*.png
+public/threeui/
+scripts/verify-*.mjs
+scripts/inspect-*.mjs

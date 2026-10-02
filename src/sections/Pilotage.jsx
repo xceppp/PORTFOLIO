@@ -1,100 +1,119 @@
-import { useId, useState } from 'react';
+import { Suspense, lazy, useEffect, useRef, useState } from 'react';
 import { pilotage } from '../content';
+import { useInView } from '../hooks/useInView';
+import { usePrefersReducedMotion, useTheme } from '../hooks/useTheme';
 
-function axisItems(axis) {
-  if (axis.projects) {
-    return axis.projects.map((p) => ({
-      title: p.name,
-      meta: p.category,
-      body: p.body,
-      featured: p.featured,
-    }));
+const BestsellersBookShowcase = lazy(() =>
+  import('@designcodeio/threeui/components/BestsellersBookShowcase').then((m) => ({
+    default: m.BestsellersBookShowcase,
+  })),
+);
+
+function syncIframeTheme(root, theme) {
+  if (!root) return;
+  const iframe = root.querySelector('iframe');
+  const doc = iframe?.contentDocument;
+  if (!doc?.documentElement) return;
+
+  doc.documentElement.setAttribute('data-theme', theme);
+  doc.documentElement.style.colorScheme = theme;
+
+  const scheme = doc.querySelector('meta[name="color-scheme"]');
+  if (scheme) scheme.setAttribute('content', theme);
+
+  const themeColor = doc.querySelector('meta[name="theme-color"]');
+  if (themeColor) {
+    themeColor.setAttribute('content', theme === 'light' ? '#f4f5f3' : '#15171a');
   }
-  if (axis.blocks) {
-    return axis.blocks.map((b) => ({
-      title: b.title,
-      meta: null,
-      body: b.body,
-      featured: false,
-    }));
-  }
-  return (axis.entries || []).map((e) => ({
-    title: e.title,
-    meta: e.years,
-    body: e.body,
-    featured: false,
-  }));
 }
 
 export default function Pilotage() {
-  const [tab, setTab] = useState(0);
-  const baseId = useId();
-  const current = pilotage.tabs[tab];
-  const items = axisItems(current);
+  const reduced = usePrefersReducedMotion();
+  const { resolved } = useTheme();
+  const stageRef = useRef(null);
+  const sectionRef = useRef(null);
+  const inView = useInView(sectionRef, { rootMargin: '280px 0px' });
+  const [activated, setActivated] = useState(false);
+  const brass = resolved === 'light' ? '#8c6a2e' : '#c29a5b';
+
+  // Keep showcase mounted after first visit so theme toggles stay cheap
+  useEffect(() => {
+    if (inView) setActivated(true);
+  }, [inView]);
+
+  useEffect(() => {
+    const root = stageRef.current;
+    if (!root || reduced || !activated) return undefined;
+
+    const apply = () => syncIframeTheme(root, resolved);
+    apply();
+
+    const iframe = root.querySelector('iframe');
+    iframe?.addEventListener('load', apply);
+
+    // Short burst only — avoid perpetual 400ms polling
+    const id = window.setInterval(apply, 500);
+    const stop = window.setTimeout(() => window.clearInterval(id), 2500);
+
+    return () => {
+      iframe?.removeEventListener('load', apply);
+      window.clearInterval(id);
+      window.clearTimeout(stop);
+    };
+  }, [resolved, reduced, activated]);
 
   return (
-    <section id={pilotage.id} className="section pilotage">
+    <section id={pilotage.id} className="section pilotage" ref={sectionRef}>
       <div className="shell">
         <h2 className="section-title">{pilotage.title}</h2>
         <p className="pilotage__lede">Trois axes de direction institutionnelle</p>
+      </div>
 
-        <div className="pilot-layout">
-          <div
-            className="pilot-layout__tabs"
-            role="tablist"
-            aria-label="Axes de pilotage"
-          >
-            {pilotage.tabs.map((axis, i) => (
-              <button
-                key={axis.id}
-                type="button"
-                role="tab"
-                id={`${baseId}-tab-${axis.id}`}
-                aria-selected={tab === i}
-                aria-controls={`${baseId}-panel-${axis.id}`}
-                tabIndex={tab === i ? 0 : -1}
-                className={`pilot-layout__tab ${tab === i ? 'is-on' : ''}`}
-                onClick={() => setTab(i)}
-                onKeyDown={(e) => {
-                  if (e.key === 'ArrowRight') {
-                    e.preventDefault();
-                    setTab((t) => (t + 1) % pilotage.tabs.length);
-                  }
-                  if (e.key === 'ArrowLeft') {
-                    e.preventDefault();
-                    setTab((t) => (t - 1 + pilotage.tabs.length) % pilotage.tabs.length);
-                  }
-                }}
-              >
-                <span className="mono">0{i + 1}</span>
-                <span>{axis.label}</span>
-              </button>
-            ))}
-          </div>
-
-          <div
-            role="tabpanel"
-            id={`${baseId}-panel-${current.id}`}
-            aria-labelledby={`${baseId}-tab-${current.id}`}
-            className="pilot-layout__panel"
-            key={current.id}
-          >
-            <h3>{current.label}</h3>
-            <ul className="pilot-layout__items">
-              {items.map((item) => (
-                <li
-                  key={item.title}
-                  className={`pilot-layout__item ${item.featured ? 'is-featured' : ''}`}
-                >
-                  {item.meta && <span className="pilot-layout__meta">{item.meta}</span>}
-                  <h4>{item.title}</h4>
-                  <p>{item.body}</p>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
+      <div
+        className="pilotage__stage shader-frame"
+        ref={stageRef}
+        data-pilotage-theme={resolved}
+        data-active={activated && inView ? 'true' : 'false'}
+      >
+        {reduced || !activated ? (
+          <PilotageFallback />
+        ) : (
+          <Suspense fallback={<div className="pilotage__stage-fallback" aria-hidden="true" />}>
+            <BestsellersBookShowcase
+              key={resolved}
+              headingFont="geist"
+              bodyFont="geist"
+              headingWeight="600"
+              bodyWeight="400"
+              primaryColor={brass}
+              headingSize={280}
+              bodySize={16}
+              headingLetterSpacing={-0.04}
+            />
+          </Suspense>
+        )}
       </div>
     </section>
+  );
+}
+
+function PilotageFallback() {
+  return (
+    <div className="pilotage__fallback shell">
+      {pilotage.tabs.map((axis, i) => (
+        <article key={axis.id} className="pilotage__fallback-card">
+          <p className="mono">0{i + 1}</p>
+          <h3>{axis.label}</h3>
+          <ul>
+            {(axis.projects || axis.blocks || axis.entries || []).map((item) => (
+              <li key={item.name || item.title}>
+                <strong>{item.name || item.title}</strong>
+                <span>{item.body}</span>
+              </li>
+            ))}
+          </ul>
+        </article>
+      ))}
+    </div>
   );
 }
