@@ -61,7 +61,22 @@ export default function Instruments() {
                   as="p"
                   delay={180 + i * 90}
                 />
-                {item.logos?.length ? (
+                {item.partners?.length ? (
+                  <ul className="stats__partners" aria-label={item.detail}>
+                    {item.partners.map((partner) => (
+                      <li key={partner.name} className="stats__partner">
+                        <img
+                          className="stats__logo"
+                          src={partner.logo}
+                          alt={partner.name}
+                          title={partner.name}
+                          loading="lazy"
+                          decoding="async"
+                        />
+                      </li>
+                    ))}
+                  </ul>
+                ) : item.logos?.length ? (
                   <div className="stats__logos" aria-label={item.detail}>
                     {item.logos.map((src) => (
                       <img

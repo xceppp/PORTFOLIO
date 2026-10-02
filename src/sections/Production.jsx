@@ -58,81 +58,83 @@ export default function Production() {
           </a>
         </div>
 
-        <div className="paper-deck" aria-label="Publications">
-          <div className="paper-deck__meta">
+        <div className="paper-strip" aria-label="Publications">
+          <div className="paper-strip__meta">
             <p className="mono">
-              {String(index + 1).padStart(2, '0')} / {String(publications.length).padStart(2, '0')}
+              {String(index + 1).padStart(2, '0')} /{' '}
+              {String(publications.length).padStart(2, '0')}
             </p>
           </div>
 
-          <div className="paper-deck__row">
+          <div className="paper-strip__row">
             <NavArrow
               direction="prev"
-              className="paper-deck__arrow"
+              className="paper-strip__arrow"
               label="Publication précédente"
               onClick={() => go(-1)}
             />
 
             <div
-              className="paper-deck__stage"
+              className="paper-strip__viewport"
               onTouchStart={onTouchStart}
               onTouchEnd={onTouchEnd}
             >
-              {publications.map((item, i) => {
-                const offset = i - index;
-                const wrapped =
-                  ((offset + publications.length + Math.floor(publications.length / 2)) %
-                    publications.length) -
-                  Math.floor(publications.length / 2);
-                const active = i === index;
-                const dist = Math.abs(wrapped);
-                return (
-                  <article
-                    key={item.doi}
-                    className={`paper ${active ? 'is-active' : ''}`}
-                    style={{
-                      '--o': wrapped,
-                      '--oy': dist * 10,
-                      '--sc': 1 - dist * 0.06,
-                      '--op': Math.max(0.2, 1 - dist * 0.45),
-                      zIndex: active ? 5 : Math.max(0, 3 - dist),
-                    }}
-                    aria-hidden={!active}
-                  >
-                    <header className="paper__top">
-                      <span className="paper__mark" aria-hidden="true" />
-                      <span className="mono nums paper__year">{item.year}</span>
-                      <span className="paper__journal">{item.journal}</span>
-                    </header>
-                    <h3 className="paper__title">{item.title}</h3>
-                    {item.authors && <p className="paper__authors">{item.authors}</p>}
-                    <a
-                      href={item.doi}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="doi-link"
-                      tabIndex={active ? 0 : -1}
+              <div
+                className={`paper-strip__track ${reduced ? 'is-static' : ''}`}
+                style={{ '--strip-i': index }}
+              >
+                {publications.map((item, i) => {
+                  const active = i === index;
+                  return (
+                    <article
+                      key={item.doi}
+                      className={`paper-strip__panel ${active ? 'is-active' : ''}`}
+                      aria-hidden={!active}
+                      onClick={() => {
+                        if (!active) setIndex(i);
+                      }}
                     >
-                      <DecryptedText
-                        text={item.doi.replace('https://doi.org/', 'doi:')}
-                        as="span"
-                      />
-                      <ExternalHint />
-                    </a>
-                  </article>
-                );
-              })}
+                      <header className="paper-strip__top">
+                        <span className="paper-strip__mark" aria-hidden="true" />
+                        <span className="mono nums paper-strip__year">{item.year}</span>
+                        <span className="paper-strip__journal">{item.journal}</span>
+                      </header>
+                      <h3 className="paper-strip__title">{item.title}</h3>
+                      {item.authors && (
+                        <p className="paper-strip__authors">{item.authors}</p>
+                      )}
+                      <a
+                        href={item.doi}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="doi-link"
+                        tabIndex={active ? 0 : -1}
+                      >
+                        <DecryptedText
+                          text={item.doi.replace('https://doi.org/', 'doi:')}
+                          as="span"
+                        />
+                        <ExternalHint />
+                      </a>
+                    </article>
+                  );
+                })}
+              </div>
             </div>
 
             <NavArrow
               direction="next"
-              className="paper-deck__arrow"
+              className="paper-strip__arrow"
               label="Publication suivante"
               onClick={() => go(1)}
             />
           </div>
 
-          <div className="paper-deck__dots" role="tablist" aria-label="Choisir une publication">
+          <div
+            className="paper-strip__dots"
+            role="tablist"
+            aria-label="Choisir une publication"
+          >
             {publications.map((item, i) => (
               <button
                 key={item.doi}
@@ -140,26 +142,11 @@ export default function Production() {
                 role="tab"
                 aria-selected={i === index}
                 aria-label={`Publication ${i + 1}`}
-                className={`paper-deck__dot ${i === index ? 'is-on' : ''}`}
+                className={`paper-strip__dot ${i === index ? 'is-on' : ''}`}
                 onClick={() => setIndex(i)}
               />
             ))}
           </div>
-
-          <ul className="paper-deck__list">
-            {publications.map((item, i) => (
-              <li key={`list-${item.doi}`}>
-                <button
-                  type="button"
-                  className={i === index ? 'is-on' : ''}
-                  onClick={() => setIndex(i)}
-                >
-                  <span className="mono nums">{item.year}</span>
-                  <span>{item.title}</span>
-                </button>
-              </li>
-            ))}
-          </ul>
         </div>
 
         <p className="production__latest-note">

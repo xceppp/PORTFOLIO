@@ -130,7 +130,11 @@ export const instruments = {
       suffix: '',
       label: 'Partenariats de coopération',
       detail: 'CNAM, ULCO, ENSIM',
-      logos: ['/logos/cnam.svg', '/logos/ulco.svg', '/logos/ensim.svg'],
+      partners: [
+        { name: 'CNAM', logo: '/logos/cnam.png' },
+        { name: 'ULCO', logo: '/logos/ulco.png' },
+        { name: 'ENSIM', logo: '/logos/ensim.png' },
+      ],
     },
   ],
 };
