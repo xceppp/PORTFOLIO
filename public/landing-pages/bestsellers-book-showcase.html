@@ -1880,7 +1880,7 @@
       [data-mode="gallery"] .book-card[data-book="codex"] {
         left: 50% !important;
         top: 36% !important;
-        width: min(52vw, 248px) !important;
+        width: min(46vw, 220px) !important;
         --r: 0.5deg !important;
         --yaw: -2deg !important;
         opacity: 1 !important;
@@ -1891,29 +1891,33 @@
       }
 
       [data-mode="gallery"] .book-card[data-book="claude"] {
-        left: 22% !important;
-        top: 50% !important;
-        width: min(44vw, 210px) !important;
+        left: 18% !important;
+        top: 52% !important;
+        width: min(40vw, 190px) !important;
         --r: -12deg !important;
         --yaw: -10deg !important;
         opacity: 1 !important;
         pointer-events: auto !important;
-        z-index: 2 !important;
+        z-index: 5 !important;
         transform: translate3d(calc(-50% + var(--local-x)), calc(var(--hover-y) + var(--local-y)), 0)
           rotate(var(--r)) rotateY(var(--yaw)) !important;
       }
 
       [data-mode="gallery"] .book-card[data-book="cursor"] {
-        left: 78% !important;
-        top: 50% !important;
-        width: min(44vw, 210px) !important;
+        left: 82% !important;
+        top: 52% !important;
+        width: min(40vw, 190px) !important;
         --r: 12deg !important;
         --yaw: 10deg !important;
         opacity: 1 !important;
         pointer-events: auto !important;
-        z-index: 2 !important;
+        z-index: 5 !important;
         transform: translate3d(calc(-50% + var(--local-x)), calc(var(--hover-y) + var(--local-y)), 0)
           rotate(var(--r)) rotateY(var(--yaw)) !important;
+      }
+
+      [data-mode="gallery"] .book-card.is-focus {
+        z-index: 6 !important;
       }
 
       [data-mode="gallery"] .hero-word {
@@ -2025,14 +2029,15 @@
         left: 0 !important;
         bottom: 0 !important;
         width: 100% !important;
-        height: min(50svh, 420px) !important;
-        max-height: 50svh !important;
+        height: min(52svh, 440px) !important;
+        max-height: 52svh !important;
         padding: 14px 16px 72px !important;
         opacity: 1 !important;
-        transform: translate3d(0, 12%, 0) !important;
-        animation: chalh-detail-sheet-in 520ms cubic-bezier(.22, 1, .36, 1) 180ms both !important;
+        visibility: visible !important;
+        transform: none !important;
+        animation: chalh-detail-sheet-in 420ms cubic-bezier(.22, 1, .36, 1) both !important;
         pointer-events: auto !important;
-        z-index: 20 !important;
+        z-index: 30 !important;
         overflow: hidden !important;
         background: color-mix(in srgb, var(--canvas) 94%, var(--surface)) !important;
         box-shadow: 0 -10px 36px rgba(0, 0, 0, 0.3) !important;
@@ -2040,8 +2045,23 @@
       }
 
       @keyframes chalh-detail-sheet-in {
-        from { opacity: 0; transform: translate3d(0, 18%, 0); }
+        from { opacity: 0; transform: translate3d(0, 24px, 0); }
         to { opacity: 1; transform: translate3d(0, 0, 0); }
+      }
+
+      /* Selected book must win over per-book hide rules */
+      [data-mode="detail"] .book-card.selected[data-book="codex"],
+      [data-mode="detail"] .book-card.selected[data-book="claude"],
+      [data-mode="detail"] .book-card.selected[data-book="cursor"] {
+        opacity: 1 !important;
+        visibility: visible !important;
+        filter: none !important;
+        left: 50% !important;
+        top: 18% !important;
+        width: min(52vw, 230px) !important;
+        transform: translate3d(-50%, -50%, 0) rotate(-3deg) scale(1.06) !important;
+        z-index: 24 !important;
+        pointer-events: none !important;
       }
 
       html[data-theme="light"] [data-mode="detail"] .detail-panel {
@@ -2176,22 +2196,42 @@
         pointer-events: none !important;
       }
 
-      [data-mode="detail"] .book-card.selected {
+      [data-mode="detail"] .book-card.selected,
+      [data-mode="detail"] .book-card.selected[data-book="codex"],
+      [data-mode="detail"] .book-card.selected[data-book="claude"],
+      [data-mode="detail"] .book-card.selected[data-book="cursor"] {
+        opacity: 1 !important;
+        visibility: visible !important;
+        filter: none !important;
         left: 22% !important;
         top: 46% !important;
         width: min(28vw, 400px) !important;
         transform: translate3d(-50%, -50%, 0) rotate(-4deg) scale(1.04) !important;
-        z-index: 14 !important;
+        z-index: 24 !important;
         pointer-events: none !important;
+      }
+
+      [data-mode="detail"] .book-card.selected .front-cover {
+        transform: translate3d(0, 0, 18px) rotateY(-32deg) !important;
+        transform-origin: left center !important;
       }
 
       [data-mode="detail"] .detail-panel {
         top: 8% !important;
         right: 2.5% !important;
+        bottom: auto !important;
+        left: auto !important;
         width: min(46%, 620px) !important;
+        height: auto !important;
         max-height: calc(100% - 10%) !important;
         padding: clamp(18px, 2vw, 28px) clamp(18px, 2.2vw, 32px) 1.25rem !important;
         border-radius: 14px !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        transform: none !important;
+        animation: none !important;
+        pointer-events: auto !important;
+        z-index: 30 !important;
         background: color-mix(in srgb, var(--canvas) 90%, var(--surface)) !important;
         box-shadow: 0 18px 48px rgba(0, 0, 0, 0.22) !important;
       }
@@ -2594,7 +2634,10 @@
 
       function openBook(card) {
         const data = books[card.dataset.book];
-        if (!data) return;
+        if (!data || !card) return;
+
+        window.clearTimeout(bookSwitchTimer);
+        pendingOpenCard = null;
 
         selectedCard = card;
         focusIndex = Math.max(0, bookOrder.indexOf(card.dataset.book));
@@ -2620,45 +2663,39 @@
         detailReview.textContent = data.review;
         detailScroll.scrollTop = 0;
         detailYear.textContent = data.year;
-        cards.forEach((item) => item.classList.toggle("selected", item === card));
-        cards.forEach((item) => { item.tabIndex = -1; });
+        cards.forEach((item) => {
+          const on = item === card;
+          item.classList.toggle("selected", on);
+          item.classList.toggle("is-focus", on);
+          item.tabIndex = -1;
+        });
         body.dataset.mode = "detail";
         syncCoverMotion();
         detailPanel.setAttribute("aria-hidden", "false");
         detailPanel.inert = false;
         closeButton.tabIndex = 0;
         saveButton.setAttribute("aria-pressed", "false");
+        stage.scrollTop = 0;
         window.setTimeout(() => {
           closeButton.focus({ preventScroll: true });
           stage.scrollTop = 0;
-          if (window.innerWidth <= 900) {
-            detailScroll.scrollTop = 0;
-            detailPanel.scrollTop = 0;
-          }
-        }, reducedMotion.matches ? 0 : 120);
+          detailScroll.scrollTop = 0;
+          detailPanel.scrollTop = 0;
+        }, reducedMotion.matches ? 0 : 80);
       }
 
       function selectBook(card) {
+        if (!card) return;
         const data = books[card.dataset.book];
         if (!data) return;
-        if (body.dataset.mode === "detail") {
-          if (selectedCard === card) return;
-          // Return to the three books, then open the clicked axis
-          pendingOpenCard = card;
-          window.clearTimeout(bookSwitchTimer);
-          closeDetail();
-          bookSwitchTimer = window.setTimeout(() => {
-            const next = pendingOpenCard;
-            pendingOpenCard = null;
-            if (next) openBook(next);
-          }, reducedMotion.matches ? 40 : 760);
-          return;
-        }
+        // Always open the clicked book immediately (no dead clicks)
         openBook(card);
       }
 
       function closeDetail() {
         if (body.dataset.mode !== "detail") return;
+        window.clearTimeout(bookSwitchTimer);
+        pendingOpenCard = null;
         body.dataset.mode = "gallery";
         syncCoverMotion();
         detailPanel.setAttribute("aria-hidden", "true");
@@ -2668,13 +2705,11 @@
         lastCard?.style.setProperty("--detail-yaw", "-5deg");
         lastCard?.style.setProperty("--detail-pitch", "0deg");
         if (lastCard) lastCard.dataset.orbiting = "false";
-        window.setTimeout(() => {
-          cards.forEach((card) => card.classList.remove("selected"));
-          cards.forEach((card) => { card.tabIndex = 0; });
-          selectedCard = null;
-          lastCard?.focus({ preventScroll: true });
-          if (window.innerWidth > 900) stage.scrollTop = 0;
-        }, reducedMotion.matches ? 0 : 700);
+        cards.forEach((card) => card.classList.remove("selected"));
+        selectedCard = null;
+        setFocusIndex(focusIndex);
+        if (window.innerWidth > 900) stage.scrollTop = 0;
+        lastCard?.focus({ preventScroll: true });
       }
 
       function toggleMenu(force) {
@@ -2730,31 +2765,48 @@
       let swipeY = null;
       let swipeActive = false;
       let suppressClickUntil = 0;
+      let pointerOnCard = null;
 
       stage.addEventListener("pointerdown", (event) => {
         if (event.pointerType === "mouse" && event.button !== 0) return;
         swipeX = event.clientX;
         swipeY = event.clientY;
         swipeActive = true;
+        pointerOnCard = event.target.closest(".book-card");
       }, { passive: true });
 
       stage.addEventListener("pointerup", (event) => {
         if (!swipeActive || swipeX == null) return;
         const dx = event.clientX - swipeX;
         const dy = event.clientY - swipeY;
+        const card = pointerOnCard || event.target.closest(".book-card");
         swipeActive = false;
         swipeX = null;
         swipeY = null;
-        if (Math.abs(dx) < 48 || Math.abs(dx) < Math.abs(dy) * 1.15) return;
-        // In detail: allow swipe across panel (not while scrolling text)
+        pointerOnCard = null;
+
+        const isTap = Math.abs(dx) < 36 && Math.abs(dy) < 36;
+
+        // Tap a book → always open that book
+        if (isTap && card && body.dataset.mode === "gallery") {
+          suppressClickUntil = performance.now() + 500;
+          selectBook(card);
+          return;
+        }
+
+        if (Math.abs(dx) < 56 || Math.abs(dx) < Math.abs(dy) * 1.15) return;
+
+        // In detail: swipe changes axis
         if (body.dataset.mode === "detail") {
           if (event.target.closest(".detail-scroll") && Math.abs(dy) > Math.abs(dx) * 0.8) return;
           suppressClickUntil = performance.now() + 360;
           cycleBook(dx < 0 ? 1 : -1);
           return;
         }
-        // Gallery: swipe cycles focus between the three listed books
+
+        // Gallery swipe: cycle focus only when not tapping a book
         if (event.target.closest("a, .bottom-dock, .icon-button, .ticket-button, .close-button")) return;
+        if (card && Math.abs(dx) < 90) return;
         suppressClickUntil = performance.now() + 360;
         cycleBook(dx < 0 ? 1 : -1);
       }, { passive: true });
@@ -2763,6 +2815,7 @@
         swipeActive = false;
         swipeX = null;
         swipeY = null;
+        pointerOnCard = null;
       });
 
       document.addEventListener("keydown", (event) => {
@@ -2777,12 +2830,13 @@
       });
 
       cards.forEach((card) => {
-        card.addEventListener("click", () => {
+        card.addEventListener("click", (event) => {
+          event.preventDefault();
           if (performance.now() < suppressClickUntil) return;
           selectBook(card);
         });
-        card.addEventListener("pointerenter", () => card.dataset.hovered = "true");
-        card.addEventListener("pointerleave", () => card.dataset.hovered = "false");
+        card.addEventListener("pointerenter", () => { card.dataset.hovered = "true"; });
+        card.addEventListener("pointerleave", () => { card.dataset.hovered = "false"; });
       });
 
       coverVideos.forEach((video) => {

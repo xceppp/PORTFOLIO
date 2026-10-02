@@ -1,13 +1,9 @@
-import { Suspense, lazy, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { pilotage } from '../content';
 import { useInView } from '../hooks/useInView';
 import { usePrefersReducedMotion, useTheme } from '../hooks/useTheme';
 
-const BestsellersBookShowcase = lazy(() =>
-  import('@designcodeio/threeui/components/BestsellersBookShowcase').then((m) => ({
-    default: m.BestsellersBookShowcase,
-  })),
-);
+const PILOTAGE_BOOKS_URL = '/landing-pages/bestsellers-book-showcase.html?v=open-click-v4';
 
 function syncIframeTheme(root, theme) {
   if (!root) return;
@@ -32,14 +28,18 @@ export default function Pilotage() {
   const { resolved } = useTheme();
   const stageRef = useRef(null);
   const sectionRef = useRef(null);
+  const frameRef = useRef(null);
   const inView = useInView(sectionRef, { rootMargin: '480px 0px' });
   const [activated, setActivated] = useState(false);
-  const brass = resolved === 'light' ? '#8c6a2e' : '#c29a5b';
+  const [ready, setReady] = useState(false);
 
-  // Mount only when near viewport — avoid early WebGL/video cost while surfing
   useEffect(() => {
     if (inView) setActivated(true);
   }, [inView]);
+
+  useEffect(() => {
+    setReady(false);
+  }, [resolved]);
 
   useEffect(() => {
     const root = stageRef.current;
@@ -48,10 +48,9 @@ export default function Pilotage() {
     const apply = () => syncIframeTheme(root, resolved);
     apply();
 
-    const iframe = root.querySelector('iframe');
+    const iframe = frameRef.current || root.querySelector('iframe');
     iframe?.addEventListener('load', apply);
 
-    // Short burst only — avoid perpetual 400ms polling
     const id = window.setInterval(apply, 500);
     const stop = window.setTimeout(() => window.clearInterval(id), 2500);
 
@@ -60,7 +59,7 @@ export default function Pilotage() {
       window.clearInterval(id);
       window.clearTimeout(stop);
     };
-  }, [resolved, reduced, activated]);
+  }, [resolved, reduced, activated, ready]);
 
   return (
     <section id={pilotage.id} className="section pilotage" ref={sectionRef}>
@@ -78,19 +77,40 @@ export default function Pilotage() {
         {reduced || !activated ? (
           <PilotageFallback />
         ) : (
-          <Suspense fallback={<div className="pilotage__stage-fallback" aria-hidden="true" />}>
-            <BestsellersBookShowcase
-              key={`${resolved}:projets-center-v2`}
-              headingFont="geist"
-              bodyFont="geist"
-              headingWeight="600"
-              bodyWeight="400"
-              primaryColor={brass}
-              headingSize={280}
-              bodySize={16}
-              headingLetterSpacing={-0.04}
+          <div
+            className="threeui-background landing-page-frame"
+            data-state={ready ? 'ready' : 'loading'}
+            style={{
+              position: 'relative',
+              width: '100%',
+              height: '100%',
+              overflow: 'hidden',
+              background: 'transparent',
+              pointerEvents: 'auto',
+            }}
+          >
+            <iframe
+              key={`${resolved}:open-click-v4`}
+              ref={frameRef}
+              title="Pilotage — Trois axes de direction"
+              src={`${PILOTAGE_BOOKS_URL}&theme=${resolved}`}
+              sandbox="allow-scripts allow-same-origin"
+              loading="eager"
+              onLoad={() => {
+                setReady(true);
+                syncIframeTheme(stageRef.current, resolved);
+              }}
+              style={{
+                position: 'absolute',
+                inset: 0,
+                display: 'block',
+                width: '100%',
+                height: '100%',
+                border: 0,
+                background: 'transparent',
+              }}
             />
-          </Suspense>
+          </div>
         )}
       </div>
     </section>
