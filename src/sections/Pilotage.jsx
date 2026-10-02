@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
-import { pilotage } from '../content';
+import { contact, pilotage } from '../content';
 import { useInView } from '../hooks/useInView';
 import { usePrefersReducedMotion, useTheme } from '../hooks/useTheme';
 
-const PILOTAGE_BOOKS_URL = '/landing-pages/bestsellers-book-showcase.html?v=fan-open-v7';
+const PILOTAGE_BOOKS_URL = '/landing-pages/bestsellers-book-showcase.html?v=fan-open-v8';
 
 function syncIframeTheme(root, theme) {
   if (!root) return;
@@ -61,6 +61,34 @@ export default function Pilotage() {
     };
   }, [resolved, reduced, activated, ready]);
 
+  useEffect(() => {
+    const onMessage = (event) => {
+      const data = event.data;
+      if (!data || data.source !== 'chalh-pilotage') return;
+
+      if (data.type === 'scroll-next') {
+        const next = document.getElementById(contact.id);
+        if (next) {
+          next.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } else {
+          const section = sectionRef.current;
+          if (section) {
+            const bottom = section.getBoundingClientRect().bottom + window.scrollY;
+            window.scrollTo({ top: bottom + 8, behavior: 'smooth' });
+          }
+        }
+        return;
+      }
+
+      if (data.type === 'scroll-by' && typeof data.dy === 'number' && Number.isFinite(data.dy)) {
+        window.scrollBy({ top: data.dy, left: 0, behavior: 'auto' });
+      }
+    };
+
+    window.addEventListener('message', onMessage);
+    return () => window.removeEventListener('message', onMessage);
+  }, []);
+
   return (
     <section id={pilotage.id} className="section pilotage" ref={sectionRef}>
       <div className="shell">
@@ -90,7 +118,7 @@ export default function Pilotage() {
             }}
           >
             <iframe
-              key={`${resolved}:fan-open-v7`}
+              key={`${resolved}:fan-open-v8`}
               ref={frameRef}
               title="Pilotage — Trois axes de direction"
               src={`${PILOTAGE_BOOKS_URL}&theme=${resolved}`}

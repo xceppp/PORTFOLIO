@@ -109,6 +109,8 @@ body {
   position: relative;
   isolation: isolate;
   overflow: clip;
+  /* Solid fill from first paint — never wait on WebGL */
+  background: var(--bg-100);
 }
 
 .entry-band__bg {
@@ -119,11 +121,41 @@ body {
   overflow: hidden;
 }
 
+/* Instant stand-in while PredictiveArcCanvas chunk/WebGL boots */
+.entry-band__atmosphere {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(
+      ellipse 85% 70% at 48% 38%,
+      color-mix(in srgb, var(--brass) 16%, var(--bg-100)) 0%,
+      color-mix(in srgb, var(--teal) 8%, var(--bg-100)) 38%,
+      var(--bg-100) 72%
+    ),
+    radial-gradient(
+      circle at 1px 1px,
+      color-mix(in srgb, var(--text-primary) 16%, transparent) 1px,
+      transparent 0
+    );
+  background-size: auto, 12px 12px;
+  opacity: 1;
+  transition: opacity 480ms ease;
+}
+
+.entry-band[data-shader='ready'] .entry-band__atmosphere {
+  opacity: 0.35;
+}
+
 .entry-band__frame {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
+  opacity: 0;
+  transition: opacity 520ms ease;
+}
+
+.entry-band__frame[data-ready='true'] {
   opacity: 0.32;
 }
 
@@ -160,8 +192,19 @@ body {
 }
 
 @media (max-width: 900px) {
-  .entry-band__frame {
+  .entry-band__frame[data-ready='true'] {
     opacity: 0.22;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .entry-band__atmosphere,
+  .entry-band__frame {
+    transition: none;
+  }
+
+  .entry-band__atmosphere {
+    opacity: 1;
   }
 }
 
@@ -4151,14 +4194,14 @@ html[data-theme='dark'] .production__paper-stage iframe {
     height: min(88vh, 760px);
     min-height: 560px;
     overflow: hidden;
-    /* Keep book taps/swipes inside the iframe — pan-y was stealing touches */
-    touch-action: none;
+    /* pan-y keeps the page scrollable past the books zone */
+    touch-action: pan-y;
   }
 
   .pilotage__stage iframe,
   .pilotage__stage .landing-page-frame,
   .pilotage__stage .threeui-background {
-    touch-action: none;
+    touch-action: pan-y;
   }
 }
 

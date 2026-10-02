@@ -1,11 +1,11 @@
 import { Suspense, lazy, useEffect, useRef, useState } from 'react';
 import { usePrefersReducedMotion, useTheme } from '../hooks/useTheme';
 
-const PredictiveArcCanvas = lazy(() =>
-  import('@designcodeio/threeui/components/PredictiveArcCanvas').then((m) => ({
-    default: m.PredictiveArcCanvas,
-  })),
+// Start fetching the Halftone chunk as soon as this module loads (not after paint).
+const predictiveArcImport = import('@designcodeio/threeui/components/PredictiveArcCanvas').then(
+  (m) => ({ default: m.PredictiveArcCanvas }),
 );
+const PredictiveArcCanvas = lazy(() => predictiveArcImport);
 
 /**
  * Entry band only: top bar → hero → announcement.
@@ -16,6 +16,7 @@ export default function EntryBand({ children }) {
   const reduced = usePrefersReducedMotion();
   const bandRef = useRef(null);
   const [past, setPast] = useState(false);
+  const [shaderReady, setShaderReady] = useState(false);
 
   useEffect(() => {
     const band = bandRef.current;
@@ -46,13 +47,26 @@ export default function EntryBand({ children }) {
     };
   }, []);
 
+  // Resolve chunk ASAP so Suspense doesn't sit empty after first paint
+  useEffect(() => {
+    let alive = true;
+    predictiveArcImport.then(() => {
+      if (alive) setShaderReady(true);
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
   const showShader = !reduced && !past;
 
   return (
-    <div className="entry-band" ref={bandRef}>
-      {showShader && (
-        <div className="entry-band__bg" aria-hidden="true">
-          <div className="shader-frame entry-band__frame">
+    <div className="entry-band" ref={bandRef} data-shader={shaderReady && showShader ? 'ready' : 'pending'}>
+      <div className="entry-band__bg" aria-hidden="true">
+        {/* Instant atmosphere — visible before WebGL mounts */}
+        <div className="entry-band__atmosphere" />
+        {showShader && (
+          <div className="shader-frame entry-band__frame" data-ready={shaderReady ? 'true' : 'false'}>
             <Suspense fallback={null}>
               <PredictiveArcCanvas
                 variant="halftone-flow"
@@ -63,9 +77,9 @@ export default function EntryBand({ children }) {
               />
             </Suspense>
           </div>
-          <div className="entry-band__veil" />
-        </div>
-      )}
+        )}
+        <div className="entry-band__veil" />
+      </div>
       <div className="entry-band__content">{children}</div>
     </div>
   );
