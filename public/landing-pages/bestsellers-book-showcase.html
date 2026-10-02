@@ -1872,9 +1872,22 @@
 
     /* CHALH mobile — same 3-book fan as desktop (Projets center) */
     @media (max-width: 900px) {
+      html, body {
+        height: 100% !important;
+        min-height: 100% !important;
+        max-height: 100% !important;
+      }
+
       html, body, .stage, .gallery {
         touch-action: none !important;
         overscroll-behavior: none !important;
+      }
+
+      .stage {
+        position: relative !important;
+        height: 100% !important;
+        min-height: 100% !important;
+        max-height: 100% !important;
       }
 
       [data-mode="gallery"] .book-card {
@@ -1934,11 +1947,24 @@
         z-index: 9;
       }
 
-      /* Detail: keep real book-open (cover rotateY + page fan), not a scale pop */
+      /* Detail: keep real book-open (cover rotateY + page fan), not a scale pop.
+         Perspective stays on .gallery only — putting it on .stage makes
+         position:fixed children (detail panel) resolve against a broken CB
+         and the sheet paints above the iframe (invisible = "click does nothing"). */
+      html, body {
+        height: 100% !important;
+        min-height: 100% !important;
+      }
+
       [data-mode="detail"] .stage {
+        position: relative !important;
         min-height: 100% !important;
         height: 100% !important;
         overflow: hidden !important;
+        perspective: none !important;
+      }
+
+      [data-mode="detail"] .gallery {
         perspective: 1400px !important;
       }
 
@@ -2017,18 +2043,18 @@
       }
 
       [data-mode="detail"] .detail-panel {
-        position: fixed !important;
+        position: absolute !important;
         top: auto !important;
         right: 0 !important;
         left: 0 !important;
         bottom: 0 !important;
         width: 100% !important;
-        height: min(52svh, 440px) !important;
-        max-height: 52svh !important;
+        height: min(52%, 440px) !important;
+        max-height: 52% !important;
         padding: 14px 16px 72px !important;
         opacity: 1 !important;
         visibility: visible !important;
-        transform: translate3d(0, 0, 0) !important;
+        transform: none !important;
         animation: none !important;
         pointer-events: auto !important;
         z-index: 40 !important;
@@ -2039,6 +2065,7 @@
       }
 
       [data-mode="detail"] .close-button {
+        position: absolute !important;
         opacity: 1 !important;
         pointer-events: auto !important;
         z-index: 50 !important;
