@@ -3,7 +3,7 @@ import { pilotage } from '../content';
 import { useInView } from '../hooks/useInView';
 import { usePrefersReducedMotion, useTheme } from '../hooks/useTheme';
 
-const PILOTAGE_BOOKS_URL = '/landing-pages/bestsellers-book-showcase.html?v=mobile-carousel-v5';
+const PILOTAGE_BOOKS_URL = '/landing-pages/bestsellers-book-showcase.html?v=fan-open-v6';
 
 function syncIframeTheme(root, theme) {
   if (!root) return;
@@ -90,7 +90,7 @@ export default function Pilotage() {
             }}
           >
             <iframe
-              key={`${resolved}:mobile-carousel-v5`}
+              key={`${resolved}:fan-open-v6`}
               ref={frameRef}
               title="Pilotage — Trois axes de direction"
               src={`${PILOTAGE_BOOKS_URL}&theme=${resolved}`}

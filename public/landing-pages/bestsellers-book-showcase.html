@@ -1870,38 +1870,47 @@
       min-height: 34px !important;
     }
 
-    /* CHALH mobile — one book carousel (reliable tap) + open detail */
+    /* CHALH mobile — same 3-book fan as desktop (Projets center) */
     @media (max-width: 900px) {
       html, body, .stage, .gallery {
         touch-action: none !important;
         overscroll-behavior: none !important;
       }
 
-      [data-mode="gallery"] .book-card[data-book="codex"],
-      [data-mode="gallery"] .book-card[data-book="claude"],
-      [data-mode="gallery"] .book-card[data-book="cursor"] {
-        left: 50% !important;
-        top: 46% !important;
-        width: min(68vw, 280px) !important;
-        --r: 0deg !important;
-        --yaw: -4deg !important;
-        opacity: 0 !important;
-        visibility: hidden !important;
-        pointer-events: none !important;
-        z-index: 1 !important;
-        transform: translate3d(-50%, -50%, 0) scale(0.92) !important;
-        transition:
-          opacity 280ms ease,
-          transform 320ms cubic-bezier(.22, 1, .36, 1),
-          visibility 280ms !important;
-      }
-
-      [data-mode="gallery"] .book-card.is-focus {
+      [data-mode="gallery"] .book-card {
         opacity: 1 !important;
         visibility: visible !important;
         pointer-events: auto !important;
-        z-index: 8 !important;
-        transform: translate3d(-50%, -50%, 0) scale(1) !important;
+      }
+
+      [data-mode="gallery"] .book-card[data-book="codex"] {
+        left: 50% !important;
+        top: 36% !important;
+        width: min(52vw, 248px) !important;
+        --r: 0.5deg !important;
+        --yaw: -2deg !important;
+        z-index: 6 !important;
+        transform: translate3d(-50%, -50%, 0) rotate(var(--r)) rotateY(var(--yaw)) !important;
+      }
+
+      [data-mode="gallery"] .book-card[data-book="claude"] {
+        left: 20% !important;
+        top: 52% !important;
+        width: min(42vw, 200px) !important;
+        --r: -12deg !important;
+        --yaw: -10deg !important;
+        z-index: 4 !important;
+        transform: translate3d(-50%, -50%, 0) rotate(var(--r)) rotateY(var(--yaw)) !important;
+      }
+
+      [data-mode="gallery"] .book-card[data-book="cursor"] {
+        left: 80% !important;
+        top: 52% !important;
+        width: min(42vw, 200px) !important;
+        --r: 12deg !important;
+        --yaw: 10deg !important;
+        z-index: 4 !important;
+        transform: translate3d(-50%, -50%, 0) rotate(var(--r)) rotateY(var(--yaw)) !important;
       }
 
       [data-mode="gallery"] .hero-word {
@@ -1909,7 +1918,7 @@
       }
 
       [data-mode="gallery"] .gallery::after {
-        content: "Touchez pour ouvrir · glissez pour changer";
+        content: "Touchez un livre pour l'ouvrir";
         position: absolute;
         left: 50%;
         bottom: 9%;
@@ -2019,19 +2028,24 @@
         padding: 14px 16px 72px !important;
         opacity: 1 !important;
         visibility: visible !important;
-        transform: none !important;
-        animation: chalh-detail-sheet-in 420ms cubic-bezier(.22, 1, .36, 1) both !important;
+        transform: translate3d(0, 0, 0) !important;
+        animation: none !important;
         pointer-events: auto !important;
-        z-index: 30 !important;
+        z-index: 40 !important;
         overflow: hidden !important;
         background: color-mix(in srgb, var(--canvas) 94%, var(--surface)) !important;
         box-shadow: 0 -10px 36px rgba(0, 0, 0, 0.3) !important;
         border-radius: 16px 16px 0 0 !important;
       }
 
-      @keyframes chalh-detail-sheet-in {
-        from { opacity: 0; transform: translate3d(0, 24px, 0); }
-        to { opacity: 1; transform: translate3d(0, 0, 0); }
+      [data-mode="detail"] .close-button {
+        opacity: 1 !important;
+        pointer-events: auto !important;
+        z-index: 50 !important;
+        transform: none !important;
+        left: auto !important;
+        right: 14px !important;
+        top: 12px !important;
       }
 
       /* Selected book must win over per-book hide rules */
@@ -2614,19 +2628,41 @@
         });
       }
 
-      let pendingOpenCard = null;
-      let bookSwitchTimer = 0;
+      const bookOrder = ["codex", "claude", "cursor"];
+      let focusIndex = 0; // Projets centered first
+      let suppressOpenUntil = 0;
+
+      function cardByBook(id) {
+        return cards.find((card) => card.dataset.book === id) || null;
+      }
+
+      function setFocusIndex(next) {
+        focusIndex = (next + bookOrder.length) % bookOrder.length;
+        const id = bookOrder[focusIndex];
+        cards.forEach((card) => {
+          const on = card.dataset.book === id;
+          card.classList.toggle("is-focus", on);
+          if (body.dataset.mode === "gallery") {
+            card.tabIndex = 0;
+            if (on) card.dataset.hovered = "true";
+            else card.removeAttribute("data-hovered");
+          }
+        });
+      }
 
       function openBook(card) {
-        const data = books[card.dataset.book];
+        const data = books[card?.dataset?.book];
         if (!data || !card) return;
-
-        window.clearTimeout(bookSwitchTimer);
-        pendingOpenCard = null;
 
         selectedCard = card;
         focusIndex = Math.max(0, bookOrder.indexOf(card.dataset.book));
-        setFocusIndex(focusIndex);
+        cards.forEach((item) => {
+          const on = item === card;
+          item.classList.toggle("selected", on);
+          item.classList.toggle("is-focus", on);
+          item.tabIndex = -1;
+        });
+
         selectedCard.style.setProperty("--detail-yaw", "-5deg");
         selectedCard.style.setProperty("--detail-pitch", "0deg");
         selectedCard.dataset.orbiting = "false";
@@ -2648,43 +2684,36 @@
         detailReview.textContent = data.review;
         detailScroll.scrollTop = 0;
         detailYear.textContent = data.year;
-        cards.forEach((item) => {
-          const on = item === card;
-          item.classList.toggle("selected", on);
-          item.classList.toggle("is-focus", on);
-          item.tabIndex = -1;
-        });
+
         body.dataset.mode = "detail";
-        syncCoverMotion();
+        detailPanel.removeAttribute("inert");
         detailPanel.setAttribute("aria-hidden", "false");
-        detailPanel.inert = false;
+        detailPanel.style.opacity = "1";
+        detailPanel.style.visibility = "visible";
+        detailPanel.style.pointerEvents = "auto";
         closeButton.tabIndex = 0;
         saveButton.setAttribute("aria-pressed", "false");
+        syncCoverMotion();
         stage.scrollTop = 0;
-        window.setTimeout(() => {
-          closeButton.focus({ preventScroll: true });
-          stage.scrollTop = 0;
-          detailScroll.scrollTop = 0;
-          detailPanel.scrollTop = 0;
-        }, reducedMotion.matches ? 0 : 80);
+        detailScroll.scrollTop = 0;
+        suppressOpenUntil = performance.now() + 450;
       }
 
       function selectBook(card) {
-        if (!card) return;
-        const data = books[card.dataset.book];
-        if (!data) return;
-        // Always open the clicked book immediately (no dead clicks)
+        if (!card || !books[card.dataset.book]) return;
+        if (performance.now() < suppressOpenUntil && selectedCard === card) return;
         openBook(card);
       }
 
       function closeDetail() {
         if (body.dataset.mode !== "detail") return;
-        window.clearTimeout(bookSwitchTimer);
-        pendingOpenCard = null;
         body.dataset.mode = "gallery";
         syncCoverMotion();
         detailPanel.setAttribute("aria-hidden", "true");
-        detailPanel.inert = true;
+        detailPanel.setAttribute("inert", "");
+        detailPanel.style.opacity = "";
+        detailPanel.style.visibility = "";
+        detailPanel.style.pointerEvents = "";
         closeButton.tabIndex = -1;
         const lastCard = selectedCard;
         lastCard?.style.setProperty("--detail-yaw", "-5deg");
@@ -2693,8 +2722,7 @@
         cards.forEach((card) => card.classList.remove("selected"));
         selectedCard = null;
         setFocusIndex(focusIndex);
-        if (window.innerWidth > 900) stage.scrollTop = 0;
-        lastCard?.focus({ preventScroll: true });
+        stage.scrollTop = 0;
       }
 
       function toggleMenu(force) {
@@ -2707,33 +2735,7 @@
         menuButton.setAttribute("aria-label", willOpen ? "Close menu" : "Open menu");
       }
 
-      const bookOrder = ["codex", "claude", "cursor"];
-
-      let focusIndex = 0; // Projets centered first
-
-      function setFocusIndex(next) {
-        focusIndex = (next + bookOrder.length) % bookOrder.length;
-        const id = bookOrder[focusIndex];
-        const carouselGallery = window.innerWidth <= 900 && body.dataset.mode === "gallery";
-        cards.forEach((card) => {
-          const on = card.dataset.book === id;
-          card.classList.toggle("is-focus", on);
-          if (carouselGallery) {
-            card.dataset.hovered = on ? "true" : "false";
-            card.tabIndex = on ? 0 : -1;
-          } else if (body.dataset.mode === "gallery") {
-            card.removeAttribute("data-hovered");
-            card.tabIndex = 0;
-          }
-        });
-      }
-
       setFocusIndex(focusIndex);
-
-
-      function cardByBook(id) {
-        return cards.find((card) => card.dataset.book === id) || null;
-      }
 
       function cycleBook(dir) {
         if (body.dataset.mode === "detail") {
@@ -2746,92 +2748,94 @@
         setFocusIndex(focusIndex + dir);
       }
 
+      // Direct open on each book — do not rely on stage swipe for taps
+      cards.forEach((card) => {
+        let downX = 0;
+        let downY = 0;
+        let downAt = 0;
+
+        const markDown = (x, y) => {
+          downX = x;
+          downY = y;
+          downAt = performance.now();
+        };
+
+        const tryOpen = (x, y, event) => {
+          if (body.dataset.mode === "detail" && selectedCard === card) return;
+          if (Math.hypot(x - downX, y - downY) > 42) return;
+          if (performance.now() - downAt > 900) return;
+          event?.preventDefault?.();
+          event?.stopPropagation?.();
+          selectBook(card);
+        };
+
+        card.addEventListener("pointerdown", (event) => {
+          if (event.button !== undefined && event.button !== 0) return;
+          markDown(event.clientX, event.clientY);
+        }, { passive: true });
+
+        card.addEventListener("pointerup", (event) => {
+          if (event.button !== undefined && event.button !== 0) return;
+          tryOpen(event.clientX, event.clientY, event);
+        });
+
+        card.addEventListener("touchstart", (event) => {
+          const t = event.changedTouches?.[0];
+          if (!t) return;
+          markDown(t.clientX, t.clientY);
+        }, { passive: true });
+
+        card.addEventListener("touchend", (event) => {
+          const t = event.changedTouches?.[0];
+          if (!t) return;
+          tryOpen(t.clientX, t.clientY, event);
+        }, { passive: false });
+
+        card.addEventListener("click", (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          selectBook(card);
+        });
+
+        card.addEventListener("pointerenter", () => { card.dataset.hovered = "true"; });
+        card.addEventListener("pointerleave", () => { card.dataset.hovered = "false"; });
+      });
+
+      // Stage swipe only (not for opening books)
       let swipeX = null;
       let swipeY = null;
       let swipeActive = false;
-      let suppressClickUntil = 0;
-      let pointerOnCard = null;
-      let lastGestureAt = 0;
-
-      function endPointerGesture(clientX, clientY, target) {
-        if (!swipeActive || swipeX == null) return;
-        const now = performance.now();
-        if (now - lastGestureAt < 90) {
-          swipeActive = false;
-          swipeX = null;
-          swipeY = null;
-          pointerOnCard = null;
-          return;
-        }
-        lastGestureAt = now;
-        const dx = clientX - swipeX;
-        const dy = clientY - swipeY;
-        const card = pointerOnCard || (target && target.closest ? target.closest(".book-card") : null);
-        swipeActive = false;
-        swipeX = null;
-        swipeY = null;
-        pointerOnCard = null;
-
-        const isTap = Math.hypot(dx, dy) < 28;
-        const isMobile = window.innerWidth <= 900;
-
-        // Gallery tap → open focused / tapped book
-        if (isTap && body.dataset.mode === "gallery") {
-          const openTarget = card || cardByBook(bookOrder[focusIndex]);
-          if (openTarget) {
-            suppressClickUntil = performance.now() + 600;
-            selectBook(openTarget);
-          }
-          return;
-        }
-
-        if (Math.abs(dx) < (isMobile ? 40 : 56) || Math.abs(dx) < Math.abs(dy) * 1.05) return;
-
-        if (body.dataset.mode === "detail") {
-          if (target?.closest?.(".detail-scroll") && Math.abs(dy) > Math.abs(dx) * 0.8) return;
-          suppressClickUntil = performance.now() + 360;
-          cycleBook(dx < 0 ? 1 : -1);
-          return;
-        }
-
-        if (target?.closest?.("a, .bottom-dock, .icon-button, .ticket-button, .close-button")) return;
-        suppressClickUntil = performance.now() + 360;
-        cycleBook(dx < 0 ? 1 : -1);
-      }
+      let swipeFromCard = false;
 
       stage.addEventListener("pointerdown", (event) => {
         if (event.pointerType === "mouse" && event.button !== 0) return;
         swipeX = event.clientX;
         swipeY = event.clientY;
         swipeActive = true;
-        pointerOnCard = event.target.closest(".book-card");
+        swipeFromCard = Boolean(event.target.closest(".book-card"));
       }, { passive: true });
 
       stage.addEventListener("pointerup", (event) => {
-        endPointerGesture(event.clientX, event.clientY, event.target);
-      }, { passive: true });
-
-      // iOS Safari often prefers touchend over pointerup inside iframes
-      stage.addEventListener("touchstart", (event) => {
-        const t = event.changedTouches?.[0];
-        if (!t) return;
-        swipeX = t.clientX;
-        swipeY = t.clientY;
-        swipeActive = true;
-        pointerOnCard = event.target.closest(".book-card");
-      }, { passive: true });
-
-      stage.addEventListener("touchend", (event) => {
-        const t = event.changedTouches?.[0];
-        if (!t) return;
-        endPointerGesture(t.clientX, t.clientY, event.target);
+        if (!swipeActive || swipeX == null) return;
+        const dx = event.clientX - swipeX;
+        const dy = event.clientY - swipeY;
+        const fromCard = swipeFromCard;
+        swipeActive = false;
+        swipeX = null;
+        swipeY = null;
+        swipeFromCard = false;
+        if (Math.abs(dx) < 64 || Math.abs(dx) < Math.abs(dy) * 1.2) return;
+        if (fromCard && body.dataset.mode === "gallery") return;
+        if (body.dataset.mode === "detail" && event.target.closest(".detail-scroll") && Math.abs(dy) > Math.abs(dx) * 0.8) return;
+        if (event.target.closest("a, .bottom-dock, .icon-button, .ticket-button, .close-button")) return;
+        cycleBook(dx < 0 ? 1 : -1);
       }, { passive: true });
 
       stage.addEventListener("pointercancel", () => {
         swipeActive = false;
         swipeX = null;
         swipeY = null;
-        pointerOnCard = null;
+        swipeFromCard = false;
       });
 
       document.addEventListener("keydown", (event) => {
@@ -2843,16 +2847,6 @@
           event.preventDefault();
           cycleBook(-1);
         }
-      });
-
-      cards.forEach((card) => {
-        card.addEventListener("click", (event) => {
-          event.preventDefault();
-          if (performance.now() < suppressClickUntil) return;
-          selectBook(card);
-        });
-        card.addEventListener("pointerenter", () => { card.dataset.hovered = "true"; });
-        card.addEventListener("pointerleave", () => { card.dataset.hovered = "false"; });
       });
 
       coverVideos.forEach((video) => {
