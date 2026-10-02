@@ -1662,7 +1662,6 @@ html[data-theme='light'] .hero__name-return-line--glow {
   display: flex;
   align-items: center;
   width: max-content;
-  will-change: transform;
   backface-visibility: hidden;
 }
 
@@ -1678,6 +1677,12 @@ html[data-theme='light'] .hero__name-return-line--glow {
 .logo-band__track.is-marquee {
   /* Longer strip → slightly longer cycle so speed stays calm */
   animation: logo-marquee 48s linear infinite;
+  will-change: transform;
+}
+
+.logo-band.is-offscreen .logo-band__track.is-marquee {
+  animation-play-state: paused;
+  will-change: auto;
 }
 
 .logo-band__viewport:hover .logo-band__track.is-marquee {
@@ -2052,18 +2057,18 @@ html[data-theme='light'] .stats__logo {
   position: relative;
   display: grid;
   grid-template-columns: 40px minmax(0, 1fr) 40px;
-  align-items: center;
+  align-items: stretch;
   gap: 0.45rem;
   margin-top: clamp(1.1rem, 2.4vw, 1.8rem);
-  min-height: clamp(380px, 56vh, 560px);
+  min-height: clamp(520px, 72vh, 780px);
 }
 
 .trajectoire-koi__stage {
   position: relative;
   width: 100%;
-  height: clamp(420px, 58vh, 620px);
-  min-height: 380px;
-  overflow: visible;
+  height: clamp(520px, 72vh, 780px);
+  min-height: 480px;
+  overflow: hidden;
   background: transparent;
   border-radius: 0;
 }
@@ -2077,6 +2082,11 @@ html[data-theme='light'] .stats__logo {
 .trajectoire-koi__stage .koi-studies {
   width: 100%;
   height: 100%;
+  touch-action: none;
+}
+
+.trajectoire-koi__stage iframe {
+  touch-action: none;
 }
 
 .trajectoire-koi__fallback {
@@ -2093,86 +2103,35 @@ html[data-theme='light'] .stats__logo {
 }
 
 .trajectoire-koi__meta {
-  display: block;
-  margin-top: 1.5rem;
-  max-width: 42rem;
-  text-align: left;
-}
-
-.trajectoire-koi__meta--btn {
-  width: 100%;
-  padding: 1.15rem 1.25rem 1.25rem;
-  border: 0;
-  background: color-mix(in srgb, var(--bg-200) 88%, transparent);
-  box-shadow: 0 0 0 1px var(--ring);
-  cursor: pointer;
-  font: inherit;
-  color: inherit;
-  text-align: left;
-  transition: box-shadow 0.25s ease, background 0.25s ease;
-}
-
-.trajectoire-koi__meta--btn:hover,
-.trajectoire-koi__meta--btn:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--brass) 55%, var(--ring));
-  background: color-mix(in srgb, var(--surface) 70%, var(--bg-200));
-}
-
-.trajectoire-koi__meta--btn:focus-visible .trajectoire-koi__role {
-  color: var(--brass);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 1.1rem;
+  text-align: center;
 }
 
 .trajectoire-koi__count {
-  margin: 0 0 0.5rem;
+  margin: 0;
   color: var(--brass);
   font-size: 12px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
 }
 
-.trajectoire-koi__role {
+.trajectoire-koi__hint {
   margin: 0;
-  font-size: clamp(1.2rem, 2.35vw, 1.55rem);
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  line-height: 1.25;
-  color: var(--text-primary);
+  color: var(--text-muted, var(--text-secondary));
+  font-size: 0.85rem;
+  letter-spacing: 0.04em;
 }
 
-.trajectoire-koi__place {
-  margin: 0.45rem 0 0;
-  color: var(--text-primary);
-  opacity: 0.82;
-  line-height: 1.45;
-  font-weight: 550;
+.trajectoire--koi.is-card-opening .trajectoire-koi__stage {
+  transform: scale(1.015);
+  transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.trajectoire-koi__detail {
-  margin: 0.45rem 0 0;
-  color: var(--text-secondary);
-  line-height: 1.6;
-  font-size: 0.98rem;
-}
-
-.trajectoire-koi__years {
-  margin: 0.5rem 0 0;
-  color: var(--brass);
-  font-size: 12px;
-  letter-spacing: 0.08em;
-}
-
-.trajectoire-koi__meta-cta {
-  display: inline-block;
-  margin-top: 0.75rem;
-  color: var(--brass);
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-/* Detail dialog */
+/* Detail dialog — card opens forward */
 .trajectoire-detail {
   position: fixed;
   inset: 0;
@@ -2180,9 +2139,9 @@ html[data-theme='light'] .stats__logo {
   display: grid;
   place-items: center;
   padding: 1.25rem;
-  background: color-mix(in srgb, var(--bg-100) 55%, transparent);
-  backdrop-filter: blur(10px);
-  animation: trajectoire-detail-in 0.28s ease;
+  background: color-mix(in srgb, var(--bg-100) 62%, transparent);
+  backdrop-filter: blur(12px);
+  animation: trajectoire-detail-in 0.34s ease;
 }
 
 @keyframes trajectoire-detail-in {
@@ -2196,26 +2155,36 @@ html[data-theme='light'] .stats__logo {
 
 .trajectoire-detail__panel {
   position: relative;
-  width: min(34rem, 100%);
-  max-height: min(86vh, 640px);
+  width: min(36rem, 100%);
+  max-height: min(88vh, 680px);
   overflow: auto;
-  padding: clamp(1.5rem, 4vw, 2.25rem);
+  padding: clamp(1.65rem, 4.2vw, 2.4rem);
   background:
-    radial-gradient(circle at 20% 0%, color-mix(in srgb, var(--brass) 12%, transparent), transparent 45%),
-    var(--bg-100);
-  border: 1px solid color-mix(in srgb, var(--text-primary) 10%, transparent);
-  box-shadow: 0 24px 64px color-mix(in srgb, #000 28%, transparent);
-  animation: trajectoire-panel-in 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+    radial-gradient(circle at 18% 0%, color-mix(in srgb, var(--brass) 14%, transparent), transparent 48%),
+    var(--bg-200);
+  border: 1px solid color-mix(in srgb, var(--text-primary) 12%, transparent);
+  border-radius: 1.1rem;
+  box-shadow:
+    0 28px 70px color-mix(in srgb, #000 34%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--brass) 18%, transparent);
+  transform-origin: 50% 60%;
+  animation: trajectoire-panel-open 0.48s cubic-bezier(0.18, 0.9, 0.22, 1);
 }
 
-@keyframes trajectoire-panel-in {
+@keyframes trajectoire-panel-open {
   from {
     opacity: 0;
-    transform: translateY(12px) scale(0.985);
+    transform: translateY(28%) scale(0.72) rotateX(8deg);
+    filter: blur(2px);
+  }
+  55% {
+    opacity: 1;
+    filter: blur(0);
   }
   to {
     opacity: 1;
     transform: none;
+    filter: none;
   }
 }
 
@@ -2253,13 +2222,13 @@ html[data-theme='light'] .stats__logo {
 
 .trajectoire-detail__logo {
   display: block;
-  width: min(240px, 78%);
-  height: 64px;
+  width: min(280px, 86%);
+  height: 80px;
   object-fit: contain;
   object-position: center;
   /* Same mono treatment as .logo-band__logo */
   filter: brightness(0) invert(1);
-  opacity: 0.86;
+  opacity: 0.9;
 }
 
 html[data-theme='light'] .trajectoire-detail__logo {
@@ -2286,11 +2255,11 @@ html[data-theme='light'] .trajectoire-detail__logo {
 
 .trajectoire-detail__role {
   margin: 0;
-  font-size: clamp(1.25rem, 2.4vw, 1.6rem);
-  font-weight: 650;
-  letter-spacing: -0.015em;
+  font-size: clamp(1.45rem, 2.8vw, 1.9rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
   color: var(--text-primary);
-  line-height: 1.25;
+  line-height: 1.22;
 }
 
 .trajectoire-detail__place,
@@ -2343,12 +2312,12 @@ html[data-theme='light'] .trajectoire-detail__logo {
   .trajectoire-koi {
     grid-template-columns: 30px minmax(0, 1fr) 30px;
     gap: 0.2rem;
-    min-height: clamp(360px, 54vh, 520px);
+    min-height: clamp(480px, 68vh, 720px);
   }
 
   .trajectoire-koi__stage {
-    height: clamp(380px, 56vh, 540px);
-    min-height: 340px;
+    height: clamp(480px, 68vh, 720px);
+    min-height: 440px;
   }
 
   .trajectoire-koi__arrow.nav-arrow,
@@ -2357,8 +2326,9 @@ html[data-theme='light'] .trajectoire-detail__logo {
     height: 30px;
   }
 
-  .trajectoire-koi__meta--btn {
-    padding: 1rem 1rem 1.1rem;
+  .trajectoire-detail__panel {
+    border-radius: 0.95rem;
+    max-height: min(90vh, 720px);
   }
 }
 
@@ -3767,9 +3737,14 @@ html[data-theme='light'] .tx-interventions__item:hover .tx-interventions__logo {
 
 .production__paper-stage,
 .production__paper-stage::before,
-.production__paper-stage::after {
+.production__paper-stage::after,
+html[data-theme='dark'] .production__paper-stage,
+html[data-theme='dark'] .production__paper-stage .three-d-paper,
+html[data-theme='dark'] .production__paper-stage iframe {
   background: transparent !important;
+  background-color: transparent !important;
   box-shadow: none !important;
+  outline: none !important;
 }
 
 .production__paper-fallback strong {

@@ -26,15 +26,10 @@ export default function Production() {
   const inView = useInView(sectionRef, { rootMargin: '900px 0px' });
   const [activated, setActivated] = useState(false);
 
+  // Mount only when near viewport — keeps scroll snappy away from the paper
   useEffect(() => {
     if (inView) setActivated(true);
   }, [inView]);
-
-  // Warm the paper early so dark-theme WebGL is ready before the section lands
-  useEffect(() => {
-    const id = window.setTimeout(() => setActivated(true), 1200);
-    return () => window.clearTimeout(id);
-  }, []);
 
   const article = publications[index];
 
@@ -140,7 +135,7 @@ export default function Production() {
                     variant="original"
                     article={article}
                     theme={resolved === 'light' ? 'light' : 'dark'}
-                    active={activated}
+                    active={activated && inView}
                   />
                 </Suspense>
               )}

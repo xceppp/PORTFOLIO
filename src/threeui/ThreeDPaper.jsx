@@ -31,7 +31,7 @@ export function ThreeDPaper({
       : originalSource);
 
   // Include a build stamp so theme/srcDoc patches remount after HMR
-  const frameKey = `${theme}::${article?.doi || 'default'}::v5`;
+  const frameKey = `${theme}::${article?.doi || 'default'}::v9`;
   const [front, setFront] = useState(null);
   const [back, setBack] = useState(null);
 
@@ -64,14 +64,14 @@ export function ThreeDPaper({
     return () => window.clearTimeout(id);
   }, [live, frameKey, srcDoc, article?.title, front]);
 
-  // Only tear down when parent deactivates or tab is hidden — not on scroll leave
+  // Tear down sooner when off-screen / hidden to free the RAF loop
   useEffect(() => {
     if (live) return undefined;
     if (active && inView) return undefined;
     const id = window.setTimeout(() => {
       setFront(null);
       setBack(null);
-    }, 1800);
+    }, 600);
     return () => window.clearTimeout(id);
   }, [live, active, inView]);
 
@@ -117,6 +117,7 @@ export function ThreeDPaper({
             height: '100%',
             border: 0,
             background: 'transparent',
+            colorScheme: theme === 'light' ? 'light' : 'dark',
             opacity: 1,
             pointerEvents: 'none',
             zIndex: 1,
@@ -140,6 +141,7 @@ export function ThreeDPaper({
             height: '100%',
             border: 0,
             background: 'transparent',
+            colorScheme: theme === 'light' ? 'light' : 'dark',
             opacity: front.ready || !back ? 1 : 0,
             pointerEvents: front.ready ? 'auto' : 'none',
             transition: 'opacity 320ms ease',

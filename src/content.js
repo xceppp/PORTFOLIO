@@ -195,7 +195,7 @@ export const trajectoire = {
       institution: 'Laboratoire d\'Ingénierie, Systèmes et Applications',
       place: 'Fès',
       detail: 'Membre fondateur. Responsable de l\'équipe Mécatronique, Modélisation et Contrôle de 2018 à 2022.',
-      logo: '/logos/lisa.png',
+      logo: '/logos/lisa.svg',
       current: false,
     },
     {

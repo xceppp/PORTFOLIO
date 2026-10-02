@@ -36,15 +36,10 @@ export default function Pilotage() {
   const [activated, setActivated] = useState(false);
   const brass = resolved === 'light' ? '#8c6a2e' : '#c29a5b';
 
-  // Mount once near viewport (or shortly after page load) and keep it
+  // Mount only when near viewport — avoid early WebGL/video cost while surfing
   useEffect(() => {
     if (inView) setActivated(true);
   }, [inView]);
-
-  useEffect(() => {
-    const id = window.setTimeout(() => setActivated(true), 1800);
-    return () => window.clearTimeout(id);
-  }, []);
 
   useEffect(() => {
     const root = stageRef.current;
@@ -85,7 +80,7 @@ export default function Pilotage() {
         ) : (
           <Suspense fallback={<div className="pilotage__stage-fallback" aria-hidden="true" />}>
             <BestsellersBookShowcase
-              key={resolved}
+              key={`${resolved}:projets-center-v2`}
               headingFont="geist"
               bodyFont="geist"
               headingWeight="600"

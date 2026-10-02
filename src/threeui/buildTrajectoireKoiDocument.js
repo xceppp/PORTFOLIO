@@ -40,15 +40,15 @@ function buildCopyHtml(role, detail) {
 
 function buildCardMarkup(station, cardId, theme) {
   const palette = (theme === 'light' ? PANEL_LIGHT : PANEL_DARK)[cardId % 3];
-  const { roleHtml, detailHtml, count } = buildCopyHtml(station.role, station.detail);
-  const wordmark = station.place || station.institution;
-  const mark = station.mark || station.years;
+  const { roleHtml, detailHtml } = buildCopyHtml(station.role, station.detail);
+  const city = station.place || station.institution;
+  const period = station.years || station.mark || '';
   const label = `${station.role}. ${station.years}. ${station.institution}. ${station.detail}`;
 
   return `<div
         class="stack-shell"
         data-card-id="${cardId}"
-        data-name="${escapeHtml(wordmark)}"
+        data-name="${escapeHtml(city)}"
         role="button"
         tabindex="${cardId === 0 ? '0' : '-1'}"
         aria-label="${escapeHtml(label)} Cliquez pour les détails. Glissez pour naviguer."
@@ -59,10 +59,11 @@ function buildCardMarkup(station, cardId, theme) {
             <section class="copy-panel" aria-label="${escapeHtml(station.role)}">
               <p class="copy copy--role" aria-hidden="true">${roleHtml}</p>
               ${detailHtml ? `<p class="copy copy--detail" aria-hidden="true">${detailHtml}</p>` : ''}
-              <div class="brand-lockup" aria-label="${escapeHtml(wordmark)}">
-                <span class="wordmark reveal-lockup" style="--reveal-index: ${count}">${escapeHtml(wordmark)}</span>
-                <span class="hanko hanko-card-${cardId} reveal-lockup" style="--reveal-index: ${count + 1}" aria-hidden="true"><span>${escapeHtml(mark)}</span></span>
-              </div>
+              <p class="copy copy--meta" aria-hidden="true">
+                <span class="meta-city">${escapeHtml(city)}</span>
+                <span class="meta-sep" aria-hidden="true"> · </span>
+                <span class="meta-period">${escapeHtml(period)}</span>
+              </p>
             </section>
           </article>
         </div>
@@ -133,135 +134,146 @@ function injectDeckLogic(html, stations, theme) {
         const ctx = card.context;
         const label = String(card.shell?.dataset?.name || "CHALH").toUpperCase();
         ctx.fillStyle = TRAJECTOIRE_LIGHT ? "rgba(22,24,27,0.82)" : "rgba(236,236,234,0.88)";
-        ctx.font = "700 42px Arial, Helvetica, sans-serif";
+        ctx.font = "700 36px Arial, Helvetica, sans-serif";
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
-        ctx.fillText(label.slice(0, 18), WIDTH / 2, HEIGHT / 2 - HEIGHT * 0.04);
+        ctx.fillText(label.slice(0, 18), WIDTH / 2, HEIGHT * 0.32);
       };
 
       const trajectoireDrawLogo = (card) => {
-        const ctx = card.context;
-        const panel = card.panelColor || (TRAJECTOIRE_LIGHT ? "#f4f5f3" : "#1a1d21");
-        ctx.fillStyle = panel;
-        ctx.fillRect(0, 0, WIDTH, HEIGHT);
-        if (!card.imageReady) return;
-        if (!card.imageUsable) {
-          trajectoireDrawFallbackMark(card);
-          return;
-        }
-        const img = card.image;
-        const iw = img.naturalWidth || WIDTH;
-        const ih = img.naturalHeight || HEIGHT;
-        if (!iw || !ih) {
-          trajectoireDrawFallbackMark(card);
-          return;
-        }
-        const padX = WIDTH * 0.34;
-        const padY = HEIGHT * 0.36;
-        const maxW = WIDTH - padX * 2;
-        const maxH = HEIGHT - padY * 2;
-        const ratio = iw / ih;
-        let dw = maxW;
-        let dh = dw / ratio;
-        if (dh > maxH) {
-          dh = maxH;
-          dw = dh * ratio;
-        }
-        const tw = Math.max(1, Math.round(dw));
-        const th = Math.max(1, Math.round(dh));
-        const dx = Math.round((WIDTH - tw) / 2);
-        const dy = Math.round((HEIGHT - th) / 2 - HEIGHT * 0.02);
-        const off = document.createElement("canvas");
-        off.width = tw;
-        off.height = th;
-        const octx = off.getContext("2d", { willReadFrequently: true });
-        octx.clearRect(0, 0, tw, th);
-        octx.drawImage(img, 0, 0, tw, th);
-        let data;
         try {
-          data = octx.getImageData(0, 0, tw, th);
-        } catch (err) {
+          const ctx = card.context;
+          if (!ctx) return;
+          const panel = card.panelColor || (TRAJECTOIRE_LIGHT ? "#f4f5f3" : "#1a1d21");
+          ctx.setTransform(1, 0, 0, 1, 0, 0);
+          ctx.globalAlpha = 1;
+          ctx.filter = "none";
+          ctx.fillStyle = panel;
+          ctx.fillRect(0, 0, WIDTH, HEIGHT);
+          if (!card.imageReady) return;
+          if (!card.imageUsable || !card.image) {
+            trajectoireDrawFallbackMark(card);
+            return;
+          }
+          const img = card.image;
+          const iw = img.naturalWidth || 0;
+          const ih = img.naturalHeight || 0;
+          if (!iw || !ih) {
+            trajectoireDrawFallbackMark(card);
+            return;
+          }
+          const zoneTop = HEIGHT * 0.08;
+          const zoneH = HEIGHT * 0.72;
+          const padX = WIDTH * 0.18;
+          const maxW = WIDTH - padX * 2;
+          const maxH = zoneH * 0.85;
+          const ratio = iw / ih;
+          let dw = maxW;
+          let dh = dw / ratio;
+          if (dh > maxH) {
+            dh = maxH;
+            dw = dh * ratio;
+          }
+          const tw = Math.max(1, Math.round(dw));
+          const th = Math.max(1, Math.round(dh));
+          const dx = Math.round((WIDTH - tw) / 2);
+          const dy = Math.round(zoneTop + (zoneH - th) / 2);
           ctx.save();
-          ctx.globalAlpha = 0.86;
-          ctx.filter = TRAJECTOIRE_LIGHT ? "brightness(0)" : "brightness(0) invert(1)";
+          ctx.globalAlpha = TRAJECTOIRE_LIGHT ? 0.82 : 0.9;
+          ctx.imageSmoothingEnabled = true;
+          // Same mono as logo band — keep it simple so logos always show
+          ctx.filter = TRAJECTOIRE_LIGHT
+            ? "brightness(0)"
+            : "brightness(0) invert(1)";
           ctx.drawImage(img, dx, dy, tw, th);
           ctx.restore();
-          return;
+        } catch (err) {
+          try { trajectoireDrawFallbackMark(card); } catch (e2) {}
         }
-        const px = data.data;
-        const ink = TRAJECTOIRE_LIGHT ? 22 : 236;
-        for (let i = 0; i < px.length; i += 4) {
-          const r = px[i], g = px[i + 1], b = px[i + 2], a = px[i + 3];
-          if (a < 10) { px[i + 3] = 0; continue; }
-          const mx = Math.max(r, g, b);
-          const mn = Math.min(r, g, b);
-          if (mx > 238 && (mx - mn) < 28) { px[i + 3] = 0; continue; }
-          px[i] = px[i + 1] = px[i + 2] = ink;
-          px[i + 3] = Math.min(255, Math.round(a * 0.92));
-        }
-        octx.putImageData(data, 0, 0);
-        ctx.drawImage(off, dx, dy);
       };
 
       const bindTrajectoireCard = (card, stationIndex) => {
         if (!card) return;
-        const station = TRAJECTOIRE_STATIONS[trajectoireMod(stationIndex, TRAJECTOIRE_STATIONS.length)];
-        const shell = card.shell;
-        const roleEl = shell.querySelector(".copy--role");
-        const detailEl = shell.querySelector(".copy--detail");
-        const wordmark = shell.querySelector(".wordmark");
-        const hanko = shell.querySelector(".hanko span");
-        const brand = shell.querySelector(".brand-lockup");
-        const copyPanel = shell.querySelector(".copy-panel");
-        const built = trajectoireWordsHtml(station.role, station.detail);
-        if (roleEl) roleEl.innerHTML = built.roleHtml;
-        if (detailEl) {
-          if (built.detailHtml) {
-            detailEl.innerHTML = built.detailHtml;
-            detailEl.hidden = false;
-          } else {
-            detailEl.innerHTML = "";
-            detailEl.hidden = true;
+        try {
+          const station = TRAJECTOIRE_STATIONS[trajectoireMod(stationIndex, TRAJECTOIRE_STATIONS.length)];
+          if (!station) return;
+          const shell = card.shell;
+          const roleEl = shell.querySelector(".copy--role");
+          const detailEl = shell.querySelector(".copy--detail");
+          const cityEl = shell.querySelector(".meta-city");
+          const periodEl = shell.querySelector(".meta-period");
+          const copyPanel = shell.querySelector(".copy-panel");
+          const built = trajectoireWordsHtml(station.role, station.detail);
+          if (roleEl) roleEl.innerHTML = built.roleHtml;
+          if (detailEl) {
+            if (built.detailHtml) {
+              detailEl.innerHTML = built.detailHtml;
+              detailEl.hidden = false;
+            } else {
+              detailEl.innerHTML = "";
+              detailEl.hidden = true;
+            }
           }
+          if (cityEl) cityEl.textContent = station.place || station.institution || "";
+          if (periodEl) periodEl.textContent = station.years || station.mark || "";
+          if (copyPanel) copyPanel.setAttribute("aria-label", station.role || "");
+          shell.dataset.name = station.place || station.institution || "";
+          shell.dataset.stationIndex = String(trajectoireMod(stationIndex, TRAJECTOIRE_STATIONS.length));
+          shell.dataset.logo = station.logo || "";
+          shell.setAttribute(
+            "aria-label",
+            (station.role || "") + ". " + (station.years || "") + ". " + (station.institution || "") + ". Cliquez pour les détails."
+          );
+          card.videoUsable = false;
+          card.imageReady = false;
+          card.imageUsable = false;
+          const logoUrl = station.logo || "";
+          const applyLogo = (ok) => {
+            try {
+              card.imageReady = true;
+              card.imageUsable = Boolean(ok && card.image && card.image.naturalWidth);
+              trajectoireDrawLogo(card);
+            } catch (err) {
+              try {
+                card.imageReady = true;
+                card.imageUsable = false;
+                trajectoireDrawFallbackMark(card);
+              } catch (e2) {}
+            }
+          };
+          card.image.onload = () => applyLogo(true);
+          card.image.onerror = () => applyLogo(false);
+          // Never CORS-taint — canvas drawImage needs a clean same-origin bitmap
+          try {
+            card.image.crossOrigin = null;
+            card.image.removeAttribute("crossOrigin");
+          } catch (e) {}
+          let nextSrc = logoUrl;
+          try {
+            const base = (parent && parent.location && parent.location.href) || document.baseURI || window.location.href;
+            const u = new URL(logoUrl, base);
+            u.searchParams.set("t", String(stationIndex));
+            nextSrc = u.href;
+          } catch (e) {
+            nextSrc = logoUrl + (logoUrl.includes("?") ? "&" : "?") + "t=" + stationIndex;
+          }
+          if (card.image.src === nextSrc) {
+            if (card.image.complete && card.image.naturalWidth) applyLogo(true);
+            else if (card.image.complete) applyLogo(false);
+          } else {
+            card.image.src = nextSrc;
+            if (card.image.complete && card.image.naturalWidth) applyLogo(true);
+          }
+          parent.postMessage({
+            koiStudies: {
+              type: "index",
+              index: trajectoireMod(trajectoireFront, TRAJECTOIRE_STATIONS.length),
+              total: TRAJECTOIRE_STATIONS.length,
+            },
+          }, "*");
+        } catch (err) {
+          console.warn("bindTrajectoireCard", err);
         }
-        if (wordmark) {
-          wordmark.textContent = station.place || station.institution;
-          wordmark.style.setProperty("--reveal-index", String(built.count));
-        }
-        if (hanko) {
-          hanko.removeAttribute("lang");
-          hanko.textContent = station.mark || station.years;
-        }
-        if (brand) brand.setAttribute("aria-label", station.place || station.institution);
-        if (copyPanel) copyPanel.setAttribute("aria-label", station.role);
-        shell.dataset.name = station.place || station.institution;
-        shell.dataset.stationIndex = String(trajectoireMod(stationIndex, TRAJECTOIRE_STATIONS.length));
-        shell.setAttribute(
-          "aria-label",
-          station.role + ". " + station.years + ". " + station.institution + ". Cliquez pour les détails."
-        );
-        card.videoUsable = false;
-        card.imageReady = false;
-        card.imageUsable = false;
-        const logoUrl = station.logo || "";
-        const applyLogo = (ok) => {
-          card.imageReady = true;
-          card.imageUsable = Boolean(ok && card.image.naturalWidth);
-          trajectoireDrawLogo(card);
-        };
-        card.image.onload = () => applyLogo(true);
-        card.image.onerror = () => applyLogo(false);
-        try { card.image.crossOrigin = "anonymous"; } catch (e) {}
-        // Bust cache when rebinding the same card to a new station
-        card.image.src = logoUrl + (logoUrl.includes("?") ? "&" : "?") + "t=" + stationIndex;
-        if (card.image.complete && card.image.naturalWidth) applyLogo(true);
-        parent.postMessage({
-          koiStudies: {
-            type: "index",
-            index: trajectoireMod(trajectoireFront, TRAJECTOIRE_STATIONS.length),
-            total: TRAJECTOIRE_STATIONS.length,
-          },
-        }, "*");
       };
 
       `;
@@ -326,8 +338,8 @@ function injectDeckLogic(html, stations, theme) {
           card.shell.style.transition = "none";`,
     `order = [card.id, ...order.filter(id => id !== card.id)];
           trajectoireFront += 1;
-          bindTrajectoireCard(card, trajectoireFront + 2);
-          card.shell.style.transition = "none";`,
+          try { bindTrajectoireCard(card, trajectoireFront + 2); } catch (err) { console.warn(err); }
+          card.shell.style.transition = "none";`
   );
 
   next = next.replace(
@@ -342,12 +354,119 @@ function injectDeckLogic(html, stations, theme) {
         const distance = Math.max(190, scene.getBoundingClientRect().width * 0.66);
         const duration = reducedMotion.matches ? 0 : 360;
         trajectoireFront -= 1;
-        bindTrajectoireCard(incoming, trajectoireFront);
+        try { bindTrajectoireCard(incoming, trajectoireFront); } catch (err) { console.warn(err); }
 
-        incoming.shell.style.transition = "none";`,
+        incoming.shell.style.transition = "none";`
   );
 
-  // Click opens detail; drag still navigates
+  // Longer, smoother fly-off (was 180ms + heavy blur — felt abrupt)
+  next = next.replace(
+    `const distance = Math.max(190, scene.getBoundingClientRect().width * 0.66);
+        const duration = reducedMotion.matches ? 0 : 180;
+        const incoming = cards[order[order.length - 2]];`,
+    `const distance = Math.max(220, scene.getBoundingClientRect().width * 0.72);
+        const duration = reducedMotion.matches ? 0 : 340;
+        const incoming = cards[order[order.length - 2]];`,
+  );
+
+  next = next.replace(
+    `card.dragPlane.style.setProperty(
+          "--release-blur",
+          duration ? "16px" : "0px"
+        );`,
+    `card.dragPlane.style.setProperty(
+          "--release-blur",
+          "0px"
+        );`,
+  );
+
+  // Match previous-card reveal to the same spring timing
+  next = next.replace(
+    `const distance = Math.max(190, scene.getBoundingClientRect().width * 0.66);
+        const duration = reducedMotion.matches ? 0 : 360;
+        trajectoireFront -= 1;`,
+    `const distance = Math.max(220, scene.getBoundingClientRect().width * 0.72);
+        const duration = reducedMotion.matches ? 0 : 340;
+        trajectoireFront -= 1;`,
+  );
+
+  // Easier swipe on full-bleed cards
+  next = next.replace(
+    `const getDragCommitThreshold = () =>
+        clamp(scene.getBoundingClientRect().width * 0.18, 52, 88);`,
+    `const getDragCommitThreshold = () =>
+        clamp(scene.getBoundingClientRect().width * 0.1, 36, 64);`,
+  );
+
+  // Tap opens detail; short horizontal flick still navigates
+  next = next.replace(
+    `        } else if (isTap) {
+          sendToBack(card, x || 1, y);
+        } else {
+          setShellTransform(card);
+        }`,
+    `        } else if (isTap) {
+          if (typeof TRAJECTOIRE_STATIONS !== "undefined") {
+            const idx = trajectoireMod(
+              Number(card.shell.dataset.stationIndex || trajectoireFront),
+              TRAJECTOIRE_STATIONS.length
+            );
+            card.shell.classList.add("is-opening");
+            parent.postMessage({ koiStudies: { type: "open", index: idx } }, "*");
+            window.setTimeout(() => card.shell.classList.remove("is-opening"), 520);
+            setShellTransform(card);
+          } else {
+            sendToBack(card, x || 1, y);
+          }
+        } else if (typeof TRAJECTOIRE_STATIONS !== "undefined" && Math.abs(x) > Math.abs(y) * 0.7 && Math.abs(x) > 18) {
+          transitioning = false;
+          if (x < 0) sendToBack(card, 1, 0);
+          else bringPreviousToFront();
+        } else {
+          setShellTransform(card);
+        }`,
+  );
+
+  // Never leave the deck locked if settle throws
+  next = next.replace(
+    `transitioning = false;
+
+          if (hadFocus) incoming.shell.focus({ preventScroll: true });
+        }, duration);
+      };
+
+      const bringPreviousToFront = () => {`,
+    `transitioning = false;
+          } catch (err) {
+            console.warn("sendToBack settle", err);
+            transitioning = false;
+          }
+
+          try { if (hadFocus) incoming.shell.focus({ preventScroll: true }); } catch (e) {}
+        }, duration);
+      };
+
+      const bringPreviousToFront = () => {`,
+  );
+
+  // Wrap sendToBack settle start in try
+  next = next.replace(
+    `window.setTimeout(() => {
+          const hadFocus = document.activeElement === card.shell;
+          order = [card.id, ...order.filter(id => id !== card.id)];
+          trajectoireFront += 1;
+          try { bindTrajectoireCard(card, trajectoireFront + 2); } catch (err) { console.warn(err); }
+          card.shell.style.transition = "none";`,
+    `window.setTimeout(() => {
+          let hadFocus = false;
+          try {
+          hadFocus = document.activeElement === card.shell;
+          order = [card.id, ...order.filter(id => id !== card.id)];
+          trajectoireFront += 1;
+          try { bindTrajectoireCard(card, trajectoireFront + 2); } catch (err) { console.warn(err); }
+          card.shell.style.transition = "none";`,
+  );
+
   next = next.replace(
     `card.shell.addEventListener("click", () => {
           if (performance.now() >= card.suppressClickUntil) {
@@ -361,7 +480,9 @@ function injectDeckLogic(html, stations, theme) {
                 Number(card.shell.dataset.stationIndex || trajectoireFront),
                 TRAJECTOIRE_STATIONS.length
               );
+              card.shell.classList.add("is-opening");
               parent.postMessage({ koiStudies: { type: "open", index: idx } }, "*");
+              window.setTimeout(() => card.shell.classList.remove("is-opening"), 520);
               return;
             }
             sendToBack(card, 1, 0);
@@ -390,6 +511,42 @@ function injectDeckLogic(html, stations, theme) {
             sendToBack(card, 1, 0);
           }
         });`,
+  );
+
+  // Original once-load/error handlers race with logo rebind — neutralize for Trajectoire
+  next = next.replace(
+    `card.image.addEventListener("load", () => {
+          card.imageReady = true;
+          card.imageUsable = true;
+          drawStatic(card);
+          startInitialPixelReveal();
+          syncAnimation();
+        }, { once: true });
+
+        card.image.addEventListener("error", () => {
+          card.imageReady = true;
+          card.context.fillStyle = card.panelColor;
+          card.context.fillRect(0, 0, WIDTH, HEIGHT);
+          startInitialPixelReveal();
+          syncAnimation();
+        }, { once: true });`,
+    `card.image.addEventListener("load", () => {
+          if (typeof TRAJECTOIRE_STATIONS !== "undefined") return;
+          card.imageReady = true;
+          card.imageUsable = true;
+          drawStatic(card);
+          startInitialPixelReveal();
+          syncAnimation();
+        }, { once: true });
+
+        card.image.addEventListener("error", () => {
+          if (typeof TRAJECTOIRE_STATIONS !== "undefined") return;
+          card.imageReady = true;
+          card.context.fillStyle = card.panelColor;
+          card.context.fillRect(0, 0, WIDTH, HEIGHT);
+          startInitialPixelReveal();
+          syncAnimation();
+        }, { once: true });`,
   );
 
   next = next.replace(
@@ -397,12 +554,13 @@ function injectDeckLogic(html, stations, theme) {
         card.video.src = VIDEO_DATA[card.id];
         card.video.load();
       }`,
-    `card.image.src = IMAGE_DATA[card.id];
-        if (typeof TRAJECTOIRE_STATIONS === "undefined") {
+    `if (typeof TRAJECTOIRE_STATIONS === "undefined") {
+          card.image.src = IMAGE_DATA[card.id];
           card.video.src = VIDEO_DATA[card.id];
           card.video.load();
         } else {
           card.videoUsable = false;
+          // Logos loaded via bindTrajectoireCard after the loop (avoids once-load race)
         }
       }`,
   );
@@ -411,25 +569,26 @@ function injectDeckLogic(html, stations, theme) {
     'window.addEventListener("keydown", handleGlobalKeyDown);',
     `window.addEventListener("keydown", handleGlobalKeyDown);
       window.__koiStudies = {
-        next: () => sendToBack(topCard(), 1, 0),
-        prev: () => bringPreviousToFront(),
+        next: () => { transitioning = false; sendToBack(topCard(), 1, 0); },
+        prev: () => { transitioning = false; bringPreviousToFront(); },
       };
       window.addEventListener("message", (event) => {
         if (event.source !== parent) return;
         const msg = event.data && event.data.koiStudies;
         if (!msg) return;
+        transitioning = false;
         if (msg.type === "next") sendToBack(topCard(), 1, 0);
         if (msg.type === "prev") bringPreviousToFront();
       });
       parent.postMessage({
         koiStudies: { type: "index", index: 0, total: TRAJECTOIRE_STATIONS.length },
       }, "*");
-      // Initial bind for 3 seeded cards after boot
-      queueMicrotask(() => {
-        if (typeof cards === "undefined") return;
-        cards.forEach((card, i) => bindTrajectoireCard(card, i));
-        cards.forEach((card) => trajectoireDrawLogo(card));
-      });`,
+      // Bind logos after listeners exist — do not paint blank before load
+      if (typeof TRAJECTOIRE_STATIONS !== "undefined") {
+        cards.forEach((card, i) => {
+          try { bindTrajectoireCard(card, i); } catch (err) { console.warn(err); }
+        });
+      }`,
   );
 
   return next;
@@ -446,7 +605,14 @@ export function buildTrajectoireKoiDocument(originalHtml, stations, theme = 'dar
   const seed = stations.slice(0, 3);
   while (seed.length < 3) seed.push(stations[seed.length % stations.length]);
 
-  let html = originalHtml;
+  let html = String(originalHtml).replace(/\r\n/g, '\n');
+
+  // StorageImage auto-sets crossOrigin=anonymous on same-origin URLs.
+  // In srcDoc that taints the canvas (no ACAO) → drawImage fails → blank logos.
+  html = html.replace(
+    /function __threeuiStorageImage\([\s\S]*?return image;\}/,
+    'function __threeuiStorageImage(...args){return new Image(...args);}',
+  );
 
   // Never enable reveal ghosting / blur stack on Trajectoire cards
   html = html.replace(
@@ -504,18 +670,39 @@ export function buildTrajectoireKoiDocument(originalHtml, stations, theme = 'dar
     html, body {
       background: var(--field) !important;
     }
+    html, body {
+      width: 100% !important;
+      height: 100% !important;
+      margin: 0 !important;
+    }
     .stack-scene {
-      width: min(72vw, 64vh) !important;
-      max-width: 440px !important;
-      transform: scale(0.9);
-      transform-origin: center center;
+      width: 100% !important;
+      height: 100% !important;
+      max-width: none !important;
+      max-height: none !important;
+      aspect-ratio: auto !important;
+      transform: none !important;
+      margin: 0 !important;
+    }
+    .stack,
+    .stack-shell,
+    .drag-plane,
+    .artwork {
+      inset: 0 !important;
+      width: 100% !important;
+      height: 100% !important;
     }
     @media (max-width: 720px) {
       .stack-scene {
-        width: min(84vw, 62vh) !important;
-        max-width: 360px !important;
-        transform: scale(0.92);
+        width: 100% !important;
+        height: 100% !important;
+        max-width: none !important;
       }
+    }
+    .stack-shell.is-opening .artwork {
+      transform: scale(1.04) translateY(-1.5%);
+      box-shadow: 0 2.4cqw 5.5cqw rgb(0 0 0 / 0.32) !important;
+      transition: transform 0.42s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.42s ease;
     }
     .image-field {
       background: transparent !important;
@@ -531,6 +718,32 @@ export function buildTrajectoireKoiDocument(originalHtml, stations, theme = 'dar
       outline: none !important;
       border: 0 !important;
       background: var(--panel) !important;
+      overflow: hidden !important;
+    }
+    .image-field {
+      inset: 0 0 auto !important;
+      top: 0 !important;
+      left: 0 !important;
+      right: 0 !important;
+      bottom: auto !important;
+      width: 100% !important;
+      height: 58% !important;
+      max-width: none !important;
+      max-height: none !important;
+      object-fit: contain !important;
+      z-index: 1 !important;
+      pointer-events: none !important;
+    }
+    .copy-panel {
+      inset: 58% 0 0 !important;
+      z-index: 2 !important;
+      pointer-events: none !important;
+    }
+    .stack-shell,
+    .drag-plane,
+    .artwork {
+      pointer-events: auto !important;
+      touch-action: none !important;
     }
     .artwork::before,
     .artwork::after,
@@ -566,52 +779,25 @@ export function buildTrajectoireKoiDocument(originalHtml, stations, theme = 'dar
       scale: none !important;
       animation: none !important;
     }
-    .hanko span {
-      writing-mode: horizontal-tb !important;
-      text-orientation: mixed !important;
-      font-size: 1.85cqw !important;
-      font-weight: 700;
-      letter-spacing: 0.04em;
-      line-height: 1;
-      text-transform: none;
-      font-family: "Geist", Inter, ui-sans-serif, system-ui, sans-serif;
-      color: #16181b !important;
-      transform: none !important;
-    }
-    .brand-lockup {
-      position: absolute !important;
-      right: 5.5% !important;
-      bottom: 4.2cqw !important;
-      left: auto !important;
-      top: auto !important;
-      z-index: 2;
-    }
+    .hanko,
+    .brand-lockup,
     .wordmark {
-      max-width: 48cqw;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      font-family: "Geist", Inter, ui-sans-serif, system-ui, sans-serif !important;
-      font-style: normal !important;
-      font-weight: 700 !important;
-      font-size: clamp(2.4cqw, 2.9cqw, 3.3cqw) !important;
-      letter-spacing: -0.02em !important;
-      color: var(--ink) !important;
-      opacity: 1 !important;
+      display: none !important;
     }
     .copy-panel {
       box-shadow: none !important;
-      padding: 2.2cqw 5.5% 12cqw !important;
+      padding: 2.4cqw 5.5% 3.2cqw !important;
       display: flex !important;
       flex-direction: column !important;
       justify-content: flex-start !important;
       align-items: stretch !important;
-      gap: 0.55cqw !important;
+      gap: 0.7cqw !important;
       background: color-mix(in srgb, var(--panel) 96%, transparent) !important;
     }
     .copy,
     .copy--role,
-    .copy--detail {
+    .copy--detail,
+    .copy--meta {
       position: static !important;
       top: auto !important;
       left: auto !important;
@@ -627,21 +813,59 @@ export function buildTrajectoireKoiDocument(originalHtml, stations, theme = 'dar
       animation: none !important;
     }
     .copy--role {
-      font-size: clamp(2.55cqw, 3.1cqw, 3.55cqw) !important;
+      font-size: clamp(3.2cqw, 3.9cqw, 4.5cqw) !important;
       font-weight: 700 !important;
-      line-height: 1.18 !important;
+      line-height: 1.16 !important;
       color: var(--ink) !important;
     }
     .copy--detail {
-      font-size: clamp(1.75cqw, 2.05cqw, 2.35cqw) !important;
+      font-size: clamp(2cqw, 2.4cqw, 2.8cqw) !important;
       font-weight: 500 !important;
-      line-height: 1.35 !important;
+      line-height: 1.32 !important;
       color: var(--ink) !important;
-      opacity: 0.68 !important;
-      max-width: 92%;
+      opacity: 0.7 !important;
+      max-width: 94%;
+    }
+    .copy--meta {
+      margin-top: 0.85cqw !important;
+      font-size: clamp(2.35cqw, 2.85cqw, 3.3cqw) !important;
+      font-weight: 650 !important;
+      letter-spacing: -0.01em !important;
+      line-height: 1.25 !important;
+      color: var(--ink) !important;
+      opacity: 0.88 !important;
+    }
+    .meta-period {
+      opacity: 0.78;
+      font-variant-numeric: tabular-nums;
     }
     .stack-shell {
       cursor: pointer;
+      transition: transform 420ms cubic-bezier(0.22, 1, 0.36, 1) !important;
+    }
+    .drag-plane {
+      transition:
+        transform 420ms cubic-bezier(0.22, 1, 0.36, 1),
+        opacity 260ms cubic-bezier(0.22, 1, 0.36, 1) !important;
+      filter: none !important;
+    }
+    .stack-shell.is-tracking .drag-plane {
+      transition-duration: 48ms !important;
+      transition-timing-function: linear !important;
+    }
+    .stack-shell.is-dragging .drag-plane {
+      transition: none !important;
+    }
+    .stack-shell.is-releasing .drag-plane {
+      transition:
+        transform 340ms cubic-bezier(0.16, 1, 0.3, 1),
+        opacity 280ms cubic-bezier(0.22, 1, 0.36, 1) !important;
+      filter: none !important;
+    }
+    .artwork {
+      transition:
+        transform 420ms cubic-bezier(0.22, 1, 0.36, 1),
+        box-shadow 420ms cubic-bezier(0.22, 1, 0.36, 1) !important;
     }
     .interaction-hint {
       font-family: "Geist", Inter, ui-sans-serif, system-ui, sans-serif;

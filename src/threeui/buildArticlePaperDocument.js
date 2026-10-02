@@ -57,8 +57,17 @@ function wrapLines(str, maxChars, maxLines) {
   return lines;
 }
 
+function replaceOnce(html, search, replacement, label) {
+  if (!html.includes(search)) {
+    console.warn(`[paper-patch] miss: ${label}`);
+    return html;
+  }
+  return html.replace(search, replacement);
+}
+
 export function buildArticlePaperDocument(baseHtml, article, theme = 'dark') {
-  let html = baseHtml;
+  // Source ships with CRLF — normalize so every patch matches
+  let html = String(baseHtml).replace(/\r\n/g, '\n');
 
   const year = String(article.year || '');
   const journal = String(article.journal || 'Publication').replace(/\s+/g, ' ').trim();
@@ -69,99 +78,133 @@ export function buildArticlePaperDocument(baseHtml, article, theme = 'dark') {
   const wordmark = year || 'PAPER';
   const titleBlockH = titleLines.length * 58;
   const authorsY = Math.min(820, 500 + titleBlockH + 36);
+  const darkTheme = theme !== 'light';
 
-  html = html.replace('<h1>NOCTURNE</h1>', `<h1>${wordmark}</h1>`);
-  // Soften giant wordmark so certificate copy stays primary
-  html = html.replace(
+  html = replaceOnce(html, '<h1>NOCTURNE</h1>', `<h1>${wordmark}</h1>`, 'wordmark');
+  html = replaceOnce(
+    html,
     'color:rgba(242,242,240,.125);',
-    theme === 'light' ? 'color:rgba(22,24,27,.06);' : 'color:rgba(236,236,234,.12);',
+    darkTheme ? 'color:rgba(236,236,234,.12);' : 'color:rgba(22,24,27,.06);',
+    'wordmark-color',
   );
 
-  // Stage chrome: transparent host plate — only floating paper + year wordmark
-  if (theme === 'light') {
-    html = html.replace(
-      ':root{ --bg:#08080a; --ink:#f2f2f0; --dim:rgba(242,242,240,.38); }',
-      ':root{ --bg:transparent; --ink:#16181b; --dim:rgba(22,24,27,.48); }',
-    );
-  } else {
-    html = html.replace(
-      ':root{ --bg:#08080a; --ink:#f2f2f0; --dim:rgba(242,242,240,.38); }',
-      ':root{ --bg:transparent; --ink:#ececea; --dim:rgba(236,236,234,.42); }',
-    );
-  }
-  html = html.replace(
+  html = replaceOnce(
+    html,
+    ':root{ --bg:#08080a; --ink:#f2f2f0; --dim:rgba(242,242,240,.38); }',
+    darkTheme
+      ? ':root{ --bg:transparent; --ink:#ececea; --dim:rgba(236,236,234,.42); color-scheme:dark; }'
+      : ':root{ --bg:transparent; --ink:#16181b; --dim:rgba(22,24,27,.48); color-scheme:light; }',
+    'root-vars',
+  );
+
+  html = replaceOnce(
+    html,
     'html,body{height:100%;background:var(--bg);overflow:hidden;',
-    'html,body{height:100%;background:transparent;overflow:hidden;',
+    'html,body{height:100%;background:transparent!important;background-color:transparent!important;overflow:hidden;',
+    'html-body-bg',
   );
-  // Floating paper only — no host plate / wordmark / vignette behind the sheet
-  html = html.replace(
+
+  // Kill every host plate / vignette / grain that can read as a white square
+  html = replaceOnce(
+    html,
     '</style>',
-    `/* chalh-paper-float-v5 */
-  html,body,#bg,#gl{background:transparent!important;background-color:transparent!important}
-  #bg{display:none!important}
-  #dof,#vig,#grain,#grain2{display:none!important;opacity:0!important;pointer-events:none!important}
-  #hint{color:${theme === 'light' ? 'rgba(22,24,27,.45)' : 'rgba(236,236,234,.38)'}!important}
-  #hint b{color:${theme === 'light' ? 'rgba(22,24,27,.72)' : 'rgba(236,236,234,.62)'}!important}
+    `/* chalh-paper-float-v9 */
+  html,body,#bg,#gl,canvas,#hint{background:transparent!important;background-color:transparent!important}
+  #bg,#dof,#vig,#grain,#grain2{display:none!important;visibility:hidden!important;opacity:0!important;width:0!important;height:0!important;pointer-events:none!important}
+  #hint{color:${darkTheme ? 'rgba(236,236,234,.38)' : 'rgba(22,24,27,.45)'}!important}
+  #hint b{color:${darkTheme ? 'rgba(236,236,234,.62)' : 'rgba(22,24,27,.72)'}!important}
 </style>`,
+    'float-css',
   );
-  // Drop the dark rectangular halo plane behind the sheet
-  html = html.replace(
+
+  // Remove #bg node entirely so nothing paints a plate
+  html = html.replace(/<div id="bg">[\s\S]*?<\/div>/, '<!-- chalh: no bg plate -->');
+
+  html = replaceOnce(
+    html,
     'halo.position.z = -0.62; group.add(halo);',
-    'halo.position.z = -0.62; /* chalh: no rectangular halo plate */',
+    'halo.position.z = -0.62; halo.visible = false; /* chalh: no halo plate */',
+    'halo-add',
   );
-  // Transparent GL clear — no opaque canvas plate around the sheet
-  html = html.replace(
-    'const renderer = new T.WebGLRenderer({canvas, antialias:true, alpha:true,\n                                      powerPreference:\'high-performance\'});',
-    `const renderer = new T.WebGLRenderer({canvas, antialias:true, alpha:true, premultipliedAlpha:true,
+  html = replaceOnce(
+    html,
+    'halo.material.opacity = intro*0.30;',
+    'halo.material.opacity = 0; halo.visible = false;',
+    'halo-opacity',
+  );
+
+  html = replaceOnce(
+    html,
+    "const renderer = new T.WebGLRenderer({canvas, antialias:true, alpha:true,\n                                      powerPreference:'high-performance'});",
+    `const renderer = new T.WebGLRenderer({canvas, antialias:true, alpha:true, premultipliedAlpha:false,
                                       powerPreference:'high-performance'});
-renderer.setClearColor(0x000000, 0);`,
+renderer.setClearColor(0x000000, 0);
+canvas.style.background='transparent';`,
+    'renderer',
   );
-  // Dark theme: brighter lights so the sheet reads on black hosts
-  if (theme !== 'light') {
-    html = html.replace(
+
+  if (darkTheme) {
+    // Soft key so the white sheet stays bright against the dark stage
+    html = replaceOnce(
+      html,
       'const key  = new T.DirectionalLight(0xfff6ec, 1.42); key.position.set(-3.3,2.1,2.0);\nconst fill = new T.DirectionalLight(0x9fb6ff, 0.13); fill.position.set(3.6,-1.8,1.6);\nconst rim  = new T.DirectionalLight(0xffffff, 0.10); rim.position.set(1.6,1.2,-2.6);\nscene.add(key,fill,rim,new T.AmbientLight(0xffffff,0.16));',
-      'const key  = new T.DirectionalLight(0xfff6ec, 2.35); key.position.set(-3.3,2.1,2.0);\nconst fill = new T.DirectionalLight(0x9fb6ff, 0.55); fill.position.set(3.6,-1.8,1.6);\nconst rim  = new T.DirectionalLight(0xffffff, 0.4); rim.position.set(1.6,1.2,-2.6);\nscene.add(key,fill,rim,new T.AmbientLight(0xffffff,0.58));',
+      'const key  = new T.DirectionalLight(0xfff8f0, 1.35); key.position.set(-3.3,2.1,2.0);\nconst fill = new T.DirectionalLight(0xc5d0e4, 0.22); fill.position.set(3.6,-1.8,1.6);\nconst rim  = new T.DirectionalLight(0xffffff, 0.16); rim.position.set(1.6,1.2,-2.6);\nscene.add(key,fill,rim,new T.AmbientLight(0xffffff,0.28));',
+      'lights',
     );
   }
-  // Remove certificate double-border “square sides”; keep editorial + year only
-  html = html.replace(
+
+  // Strip certificate square frame strokes
+  html = replaceOnce(
+    html,
     `  ctx.strokeStyle='rgba(255,255,255,.34)'; ctx.lineWidth=2;
   rr(ctx,20,20,1160,1616,14); ctx.stroke();
   ctx.strokeStyle='rgba(255,255,255,.12)'; ctx.lineWidth=1;
   rr(ctx,36,36,1128,1584,10); ctx.stroke();`,
-    `  /* chalh: no square frame strokes on the floating sheet */`,
-  );
-  // Sheet tint — glass sheet only (dark theme stays cool/inked, never a white plate)
-  html = html.replace(
-    'map: tex, color: new T.Color(0xc4d2e8), side: T.DoubleSide, metalness: 0.0,',
-    theme === 'light'
-      ? 'map: tex, color: new T.Color(0xe8eef6), side: T.DoubleSide, metalness: 0.0,'
-      : 'map: tex, color: new T.Color(0xb8c4d4), side: T.DoubleSide, metalness: 0.0,',
-  );
-  html = html.replace(
-    'transparent: true, alphaTest: 0.012, opacity: 1',
-    theme === 'light'
-      ? 'transparent: true, alphaTest: 0.012, opacity: 0.9'
-      : 'transparent: true, alphaTest: 0.02, opacity: 0.82',
+    '  /* chalh: no square frame strokes */',
+    'frame-strokes',
   );
 
-  // Soft glass fill — never a solid white/graphite rectangle
-  html = html.replace(
+  // Material — white floating sheet in both themes (dark mode keeps dark stage)
+  html = replaceOnce(
+    html,
+    `map: tex, color: new T.Color(0xc4d2e8), side: T.DoubleSide, metalness: 0.0,
+  roughness: 0.06, clearcoat: 1.0, clearcoatRoughness: 0.03,
+  iridescence: 0.10, iridescenceIOR: 1.35, iridescenceThicknessRange:[120,420],
+  envMapIntensity: 1.15, specularIntensity: 1.0, ior: 1.5,
+  transparent: true, alphaTest: 0.012, opacity: 1`,
+    darkTheme
+      ? `map: tex, color: new T.Color(0xf4f5f3), side: T.DoubleSide, metalness: 0.0,
+  roughness: 0.12, clearcoat: 0.55, clearcoatRoughness: 0.08,
+  iridescence: 0.04, iridescenceIOR: 1.35, iridescenceThicknessRange:[120,360],
+  envMapIntensity: 0.75, specularIntensity: 0.7, ior: 1.45,
+  transparent: true, alphaTest: 0.012, opacity: 0.98`
+      : `map: tex, color: new T.Color(0xe8eef6), side: T.DoubleSide, metalness: 0.0,
+  roughness: 0.08, clearcoat: 0.85, clearcoatRoughness: 0.04,
+  iridescence: 0.06, iridescenceIOR: 1.35, iridescenceThicknessRange:[120,420],
+  envMapIntensity: 0.9, specularIntensity: 0.85, ior: 1.45,
+  transparent: true, alphaTest: 0.012, opacity: 0.92`,
+    'material',
+  );
+
+  html = replaceOnce(
+    html,
     "ctx.fillStyle='rgba(255,255,255,.030)'; ctx.fillRect(0,0,1200,1656);",
-    theme === 'light'
-      ? "ctx.fillStyle='rgba(248,249,250,.22)'; ctx.fillRect(0,0,1200,1656);"
-      : "ctx.fillStyle='rgba(200,210,224,.08)'; ctx.fillRect(0,0,1200,1656);",
+    darkTheme
+      ? "ctx.fillStyle='#f7f7f5'; ctx.fillRect(0,0,1200,1656);"
+      : "ctx.fillStyle='rgba(248,249,250,.22)'; ctx.fillRect(0,0,1200,1656);",
+    'glass-fill',
   );
 
-  // Frost fringe stays soft
-  html = html.replace(
+  html = replaceOnce(
+    html,
     "fr.addColorStop(0,'rgba(255,255,255,0)');   fr.addColorStop(.26,'rgba(255,255,255,.060)');\n  fr.addColorStop(.74,'rgba(255,255,255,.060)'); fr.addColorStop(1,'rgba(255,255,255,0)');",
-    theme === 'light'
-      ? "fr.addColorStop(0,'rgba(244,245,243,0)');   fr.addColorStop(.22,'rgba(244,245,243,.16)');\n  fr.addColorStop(.78,'rgba(244,245,243,.16)'); fr.addColorStop(1,'rgba(244,245,243,0)');"
-      : "fr.addColorStop(0,'rgba(236,236,234,0)');   fr.addColorStop(.22,'rgba(236,236,234,.14)');\n  fr.addColorStop(.78,'rgba(236,236,234,.14)'); fr.addColorStop(1,'rgba(236,236,234,0)');",
+    darkTheme
+      ? "fr.addColorStop(0,'rgba(255,255,255,0)');   fr.addColorStop(.22,'rgba(255,255,255,.55)');\n  fr.addColorStop(.78,'rgba(255,255,255,.55)'); fr.addColorStop(1,'rgba(255,255,255,0)');"
+      : "fr.addColorStop(0,'rgba(244,245,243,0)');   fr.addColorStop(.22,'rgba(244,245,243,.16)');\n  fr.addColorStop(.78,'rgba(244,245,243,.16)'); fr.addColorStop(1,'rgba(244,245,243,0)');",
+    'frost',
   );
 
-  // Dark ink on translucent sheet (both themes)
+  // Dark ink on white paper — both themes
   const ink = "'#0f1113'";
   const ink78 = "'rgba(15,17,19,.78)'";
   const ink62 = "'rgba(15,17,19,.62)'";
@@ -183,7 +226,8 @@ renderer.setClearColor(0x000000, 0);`,
     `  ${JSON.stringify(lines)}.forEach((s,i)=>{ if(!s) return; ctx.fillText(s, M+4, ${authorsY}+i*40); });`,
   ].join('\n');
 
-  html = html.replace(
+  html = replaceOnce(
+    html,
     `  ctx.fillStyle='#ffffff'; ctx.font='700 104px "Inter Tight", Inter, sans-serif';
   ctx.fillText('o.', M, 190);
 
@@ -198,25 +242,37 @@ renderer.setClearColor(0x000000, 0);`,
   ['By Nocturne Studio','Ilya Marchetti','Dara Okonkwo'].forEach((s,i)=>
     ctx.fillText(s, M+4, 752+i*45));`,
     editorial,
+    'editorial',
   );
 
-  html = html.replace(
+  html = replaceOnce(
+    html,
     "ctx.fillText('2026 Official Certificate.', px, py);",
     `ctx.fillText(${esc(`Publication · ${year}`)}, px, py);`,
+    'cert-label',
   );
-  html = html.replace(
+  html = replaceOnce(
+    html,
     "const endY = wrapL(ctx,'The orbit jury is proud to declare this website Studio of the Week in recognition of the great talent and effort invested in its creation.',px,py+36,296,28);",
     `const endY = wrapL(ctx,${esc(title)},px,py+36,296,26);`,
+    'cert-body',
   );
-  html = html.replace("ctx.fillText('SOTW', 48, 0);", `ctx.fillText(${esc('DOI')}, 48, 0);`);
-  html = html.replace("ctx.fillText('orbit.', M, 1516);", `ctx.fillText(${esc('orcid.')}, M, 1516);`);
-  html = html.replace("ctx.measureText('orbit.').width", `ctx.measureText(${esc('orcid.')}).width`);
-  html = html.replace(
+  html = replaceOnce(html, "ctx.fillText('SOTW', 48, 0);", `ctx.fillText(${esc('DOI')}, 48, 0);`, 'sotw');
+  html = replaceOnce(html, "ctx.fillText('orbit.', M, 1516);", `ctx.fillText(${esc('orcid.')}, M, 1516);`, 'orbit');
+  html = replaceOnce(
+    html,
+    "ctx.measureText('orbit.').width",
+    `ctx.measureText(${esc('orcid.')}).width`,
+    'orbit-w',
+  );
+  html = replaceOnce(
+    html,
     "ctx.fillText(' winners', M+w, 1516);",
     `ctx.fillText(${esc(' works')}, M+w, 1516);`,
+    'winners',
   );
 
-  // Dark ink on remaining certificate paints (both themes)
+  // Remaining paints — dark ink on white sheet (both themes)
   {
     const paintStart = html.indexOf('function drawGlass(ctx){');
     const paintEnd = html.indexOf('function makeCertTexture()', paintStart);
@@ -234,7 +290,6 @@ renderer.setClearColor(0x000000, 0);`,
     }
   }
 
-  // Early storage shim (sandboxed iframe) + short-tap DOI bridge
   const early = `
 <script data-chalh-paper-shim>
 (function () {

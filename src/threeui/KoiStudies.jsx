@@ -110,7 +110,7 @@ export function KoiStudies({
     >
       {inView ? (
         <iframe
-          key={srcDoc ? `${theme}:${resolvedStations?.length}:v6` : `src:${theme}:v6`}
+          key={srcDoc ? `${theme}:${resolvedStations?.length}:v14` : `src:${theme}:v14`}
           ref={frameRef}
           title="Koi Studies — Interactive Card Stack"
           srcDoc={srcDoc || undefined}

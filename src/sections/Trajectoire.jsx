@@ -17,6 +17,7 @@ export default function Trajectoire() {
   const [index, setIndex] = useState(0);
   const [total, setTotal] = useState(stops.length);
   const [detailOpen, setDetailOpen] = useState(false);
+  const [opening, setOpening] = useState(false);
   const [logoBroken, setLogoBroken] = useState(false);
   const current = stops[index] || stops[0];
 
@@ -29,12 +30,24 @@ export default function Trajectoire() {
     if (nextTotal) setTotal(nextTotal);
   }, []);
 
-  const onOpenDetail = useCallback((nextIndex) => {
+  const openDetail = useCallback((nextIndex) => {
     if (typeof nextIndex === 'number' && nextIndex >= 0) {
       setIndex(nextIndex);
     }
-    setDetailOpen(true);
+    setOpening(true);
+    // Brief card-lift beat, then commit the open panel
+    window.setTimeout(() => {
+      setDetailOpen(true);
+      setOpening(false);
+    }, 180);
   }, []);
+
+  const onOpenDetail = useCallback(
+    (nextIndex) => {
+      openDetail(nextIndex);
+    },
+    [openDetail],
+  );
 
   const closeDetail = useCallback(() => setDetailOpen(false), []);
 
@@ -60,7 +73,10 @@ export default function Trajectoire() {
   }, [detailOpen, closeDetail]);
 
   return (
-    <section id={trajectoire.id} className="section trajectoire trajectoire--koi">
+    <section
+      id={trajectoire.id}
+      className={`section trajectoire trajectoire--koi${opening ? ' is-card-opening' : ''}`}
+    >
       <div className="shell">
         <AnimatedContent>
           <h2 className="section-title">{trajectoire.title}</h2>
@@ -94,26 +110,13 @@ export default function Trajectoire() {
           />
         </div>
 
-        <button
-          type="button"
-          className="trajectoire-koi__meta trajectoire-koi__meta--btn"
-          onClick={() => setDetailOpen(true)}
-          aria-haspopup="dialog"
-          aria-expanded={detailOpen}
-        >
+        {/* Compact cue only — open happens on the card, not by swapping this block */}
+        <div className="trajectoire-koi__meta" aria-live="polite">
           <p className="trajectoire-koi__count mono">
             {index + 1} / {total}
           </p>
-          <h3 className="trajectoire-koi__role">{current.role}</h3>
-          <p className="trajectoire-koi__place">
-            {current.place}
-            <span aria-hidden="true"> · </span>
-            {current.institution}
-          </p>
-          <p className="trajectoire-koi__years mono">{current.years}</p>
-          <p className="trajectoire-koi__detail">{current.detail}</p>
-          <span className="trajectoire-koi__meta-cta">Voir les détails</span>
-        </button>
+          <p className="trajectoire-koi__hint">Cliquez la carte pour l&apos;ouvrir</p>
+        </div>
       </div>
 
       {detailOpen ? (
@@ -149,8 +152,8 @@ export default function Trajectoire() {
                   className="trajectoire-detail__logo"
                   src={current.logo}
                   alt={current.institution}
-                  width={240}
-                  height={64}
+                  width={280}
+                  height={80}
                   loading="eager"
                   decoding="async"
                   onError={() => setLogoBroken(true)}

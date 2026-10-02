@@ -1,5 +1,12 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="320" height="120" viewBox="0 0 320 120" role="img" aria-label="LISA">
-  <circle cx="160" cy="52" r="36" fill="none" stroke="#8c6a2e" stroke-width="3"/>
-  <text x="160" y="62" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="28" font-weight="700" letter-spacing="4" fill="#1a1d21">LISA</text>
-  <text x="160" y="108" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" letter-spacing="4" fill="#8c6a2e">LABORATOIRE</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="200" viewBox="0 0 720 200" fill="none">
+  <!-- Transparent · black ink · path-only (canvas-safe, no <text>) -->
+  <g fill="#0b0b0b">
+    <circle cx="100" cy="100" r="58" fill="none" stroke="#0b0b0b" stroke-width="11"/>
+    <rect x="89" y="62" width="22" height="76" rx="5"/>
+    <rect x="62" y="89" width="76" height="22" rx="5"/>
+    <path d="M196 48h34v88h58v30H196V48z"/>
+    <rect x="308" y="48" width="32" height="118" rx="3"/>
+    <path d="M368 76c0-19 15-32 38-32 21 0 36 11 40 28l-28 9c-2-7-8-13-14-13-8 0-13 5-13 11s9 10 26 17c21 8 40 19 40 46 0 24-19 38-44 38-25 0-43-13-47-34l28-9c3 11 11 19 21 19 9 0 15-5 15-13 0-10-11-15-28-21-23-9-44-19-44-46z"/>
+    <path d="M480 166l40-118h38l40 118h-34l-9-30h-32l-9 30h-34zm44-54h22l-11-38-11 38z"/>
+  </g>
 </svg>
