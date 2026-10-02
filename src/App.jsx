@@ -1,5 +1,6 @@
 import { useTheme } from './hooks/useTheme';
 import { a11y } from './content';
+import EntryBand from './sections/EntryBand';
 import AnnouncementBar from './sections/AnnouncementBar';
 import Nav from './sections/Nav';
 import Hero from './sections/Hero';
@@ -19,14 +20,16 @@ export default function App() {
   const { preference, setPreference, resolved } = useTheme();
 
   return (
-    <>
+    <div className="site-shell">
       <a className="skip-link" href="#contenu">
         {a11y.skip}
       </a>
-      <Nav preference={preference} setPreference={setPreference} resolved={resolved} />
       <main id="contenu">
-        <Hero />
-        <AnnouncementBar />
+        <EntryBand>
+          <Nav preference={preference} setPreference={setPreference} resolved={resolved} />
+          <Hero />
+          <AnnouncementBar />
+        </EntryBand>
         <Manifeste />
         <Trajectoire />
         <Etablissements />
@@ -38,6 +41,6 @@ export default function App() {
         <Contact />
       </main>
       <Footer preference={preference} setPreference={setPreference} resolved={resolved} />
-    </>
+    </div>
   );
 }

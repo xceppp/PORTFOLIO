@@ -19,7 +19,7 @@ export function useTheme() {
     } catch {
       /* ignore */
     }
-    return 'system';
+    return 'dark';
   });
 
   const [resolved, setResolved] = useState(() => resolveTheme(preference));
