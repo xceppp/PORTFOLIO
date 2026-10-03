@@ -2,7 +2,6 @@ import { useEffect, useId, useRef, useState } from 'react';
 import { usePrefersReducedMotion } from '../hooks/useTheme';
 
 const LETTER_STEP_MS = 1150;
-const RETURN_STEP_MS = 1850;
 
 function useIsMobile(maxWidth = 759) {
   const [mobile, setMobile] = useState(() =>
@@ -24,9 +23,6 @@ function NameSvg({ text, words, stacked, glowId }) {
   let letterIndex = 0;
   const viewBox = stacked ? '0 0 1100 420' : '0 0 1600 210';
   const fontSize = stacked ? 168 : 178;
-  const returnLine = stacked
-    ? { x1: 920, y1: 340, x2: 180, y2: 95 }
-    : { x1: 1385, y1: 108, x2: 215, y2: 108 };
 
   const strokeLetter = (ch, key) => {
     if (ch === ' ') {
@@ -70,19 +66,6 @@ function NameSvg({ text, words, stacked, glowId }) {
             <feMergeNode in="SourceGraphic" />
           </feMerge>
         </filter>
-        <filter id={`${glowId}-line`} x="-30%" y="-250%" width="160%" height="600%">
-          <feGaussianBlur stdDeviation="5" result="blur" />
-          <feMerge>
-            <feMergeNode in="blur" />
-            <feMergeNode in="blur" />
-            <feMergeNode in="SourceGraphic" />
-          </feMerge>
-        </filter>
-        <linearGradient id={`${glowId}-grad`} x1="0%" y1="0%" x2="100%" y2="0%">
-          <stop className="hero__name-grad-a" offset="0%" />
-          <stop className="hero__name-grad-b" offset="45%" />
-          <stop className="hero__name-grad-c" offset="100%" />
-        </linearGradient>
       </defs>
 
       {stacked ? (
@@ -142,22 +125,6 @@ function NameSvg({ text, words, stacked, glowId }) {
           </text>
         </>
       )}
-
-      <g
-        className="hero__name-return"
-        filter={`url(#${glowId}-line)`}
-        aria-hidden="true"
-      >
-        <line
-          className="hero__name-return-line hero__name-return-line--glow"
-          {...returnLine}
-        />
-        <line
-          className="hero__name-return-line"
-          {...returnLine}
-          stroke={`url(#${glowId}-grad)`}
-        />
-      </g>
     </svg>
   );
 }
@@ -214,7 +181,6 @@ export default function HeroName({ text }) {
       style={{
         '--letter-count': letterCount,
         '--letter-step': `${LETTER_STEP_MS}ms`,
-        '--return-step': `${RETURN_STEP_MS}ms`,
       }}
     >
       <NameSvg text={text} words={words} stacked={stacked} glowId={glowId} />

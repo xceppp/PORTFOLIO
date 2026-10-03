@@ -24,8 +24,10 @@ export default function EntryBand({ children }) {
 
     let ticking = false;
     const sync = () => {
-      const bottom = band.getBoundingClientRect().bottom;
-      const nextPast = bottom <= 60;
+      // Past the hero name plane → allow “Zakaria CHALH” back in the bar
+      const hero = document.getElementById('accueil');
+      const marker = hero || band;
+      const nextPast = marker.getBoundingClientRect().bottom <= 72;
       setPast(nextPast);
       document.documentElement.classList.toggle('entry-band-past', nextPast);
       ticking = false;

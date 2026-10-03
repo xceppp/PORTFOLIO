@@ -800,6 +800,48 @@ html.entry-band-past .site-nav {
   backdrop-filter: none;
 }
 
+/* Top section: no duplicate “Zakaria CHALH” in the bar — brand appears after scroll */
+html:not(.entry-band-past) .site-nav .atd-modern__brand,
+html:not(.entry-band-past) .site-nav .atd-modern__word,
+html:not(.entry-band-past) .site-nav__mobile-brand {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  max-width: 0 !important;
+  overflow: hidden !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+html.entry-band-past .site-nav .atd-modern__brand,
+html.entry-band-past .site-nav .atd-modern__word,
+html.entry-band-past .site-nav__mobile-brand {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  max-width: none;
+  transition: opacity 0.35s ease, visibility 0.35s ease;
+}
+
+/* Mobile topbar stays quiet over the hero (no frosted plate) until past it */
+@media (max-width: 900px) {
+  html:not(.entry-band-past) .site-nav.site-nav--dock,
+  html:not(.entry-band-past) .site-nav--dock {
+    background: transparent !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    box-shadow: none !important;
+  }
+
+  html.entry-band-past .site-nav.site-nav--dock,
+  html.entry-band-past .site-nav--dock {
+    background: color-mix(in srgb, var(--bg-100) 94%, transparent) !important;
+    backdrop-filter: blur(6px) !important;
+    -webkit-backdrop-filter: blur(6px) !important;
+    box-shadow: 0 1px 0 var(--ring) !important;
+  }
+}
+
 .site-nav__inner {
   width: min(1200px, calc(100% - 1.5rem));
   margin: 0 auto;
@@ -1222,15 +1264,11 @@ html[data-theme='light'] .hero__skip {
 
 .hero__name.is-glowing {
   --letter-step: 1.15s;
-  --return-step: 1.85s;
-  --name-cycle: calc(
-    var(--letter-count, 12) * var(--letter-step) + var(--return-step)
-  );
+  --name-cycle: calc(var(--letter-count, 12) * var(--letter-step) + 0.4s);
   display: block;
 }
 
-.hero__name.is-paused .hero__name-stroke,
-.hero__name.is-paused .hero__name-return-line {
+.hero__name.is-paused .hero__name-stroke {
   animation-play-state: paused;
 }
 
@@ -1252,27 +1290,7 @@ html[data-theme='light'] .hero__skip {
   fill: var(--text-primary);
 }
 
-.hero__name-grad-a {
-  stop-color: #ffffff;
-}
-.hero__name-grad-b {
-  stop-color: #f5e6c0;
-}
-.hero__name-grad-c {
-  stop-color: #c29a5b;
-}
-
-html[data-theme='light'] .hero__name-grad-a {
-  stop-color: #16181b;
-}
-html[data-theme='light'] .hero__name-grad-b {
-  stop-color: #3a3d42;
-}
-html[data-theme='light'] .hero__name-grad-c {
-  stop-color: #8c6a2e;
-}
-
-/* Letter-by-letter light, then return line H → Z, then loop */
+/* Letter-by-letter edge light (H→Z return streak removed) */
 .hero__name-stroke {
   stroke: #fff8e8;
   stroke-width: 4.2;
@@ -1310,53 +1328,6 @@ html[data-theme='light'] .hero__name-stroke {
   100% {
     stroke-dashoffset: -120;
     opacity: 0;
-  }
-}
-
-.hero__name-return-line {
-  fill: none;
-  stroke: #fff8e8;
-  stroke-width: 3.2;
-  stroke-linecap: round;
-  stroke-dasharray: 90 1400;
-  stroke-dashoffset: 90;
-  opacity: 0;
-  animation: name-return-light var(--name-cycle) linear infinite;
-  animation-delay: calc(var(--letter-count, 12) * var(--letter-step));
-}
-
-html[data-theme='light'] .hero__name-return-line {
-  stroke: #0a0b0d;
-  stroke-width: 3.6;
-}
-
-.hero__name-return-line--glow {
-  stroke: #ffe29a;
-  stroke-width: 12;
-  opacity: 0;
-}
-
-html[data-theme='light'] .hero__name-return-line--glow {
-  stroke: rgba(10, 11, 13, 0.45);
-  stroke-width: 14;
-}
-
-@keyframes name-return-light {
-  0% {
-    stroke-dashoffset: 70;
-    opacity: 0;
-  }
-  6% {
-    opacity: 1;
-    stroke-dashoffset: 0;
-  }
-  88% {
-    opacity: 1;
-    stroke-dashoffset: -1200;
-  }
-  100% {
-    opacity: 0;
-    stroke-dashoffset: -1280;
   }
 }
 
