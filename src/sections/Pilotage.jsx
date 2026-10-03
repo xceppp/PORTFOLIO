@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { smoothScrollTo, smoothScrollToY } from '../bits/smoothScroll';
 import { contact, pilotage } from '../content';
 import { useInView } from '../hooks/useInView';
 import { usePrefersReducedMotion, useTheme } from '../hooks/useTheme';
@@ -69,12 +70,12 @@ export default function Pilotage() {
       if (data.type === 'scroll-next') {
         const next = document.getElementById(contact.id);
         if (next) {
-          next.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          smoothScrollTo(contact.id);
         } else {
           const section = sectionRef.current;
           if (section) {
             const bottom = section.getBoundingClientRect().bottom + window.scrollY;
-            window.scrollTo({ top: bottom + 8, behavior: 'smooth' });
+            smoothScrollToY(bottom + 8);
           }
         }
         return;

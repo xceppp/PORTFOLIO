@@ -3,54 +3,6 @@ import { usePrefersReducedMotion } from '../hooks/useTheme';
 
 const LETTER_STEP_MS = 1150;
 const RETURN_STEP_MS = 1850;
-const HERO_HOLD_MS = 3500;
-const SCROLL_DOWN_MS = 1600;
-const NAV_OFFSET = 60;
-
-function easeInOutCubic(t) {
-  return t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
-}
-
-function smoothScrollTo(y, duration = SCROLL_DOWN_MS) {
-  const startY = window.scrollY || window.pageYOffset;
-  const delta = y - startY;
-  if (Math.abs(delta) < 2) return () => {};
-
-  const prevBehavior = document.documentElement.style.scrollBehavior;
-  document.documentElement.style.scrollBehavior = 'auto';
-
-  let raf = 0;
-  const start = performance.now();
-
-  const finish = () => {
-    document.documentElement.style.scrollBehavior = prevBehavior;
-  };
-
-  const tick = (now) => {
-    const t = Math.min(1, (now - start) / duration);
-    const eased = easeInOutCubic(t);
-    window.scrollTo(0, startY + delta * eased);
-    if (t < 1) {
-      raf = requestAnimationFrame(tick);
-    } else {
-      finish();
-    }
-  };
-
-  raf = requestAnimationFrame(tick);
-  return () => {
-    cancelAnimationFrame(raf);
-    finish();
-  };
-}
-
-/** Land on the section so its content is in view — never past its end. */
-function sectionEntryY(el) {
-  const top = el.offsetTop - NAV_OFFSET;
-  const end = el.offsetTop + el.offsetHeight;
-  const maxY = Math.max(0, end - window.innerHeight);
-  return Math.max(0, Math.min(top, maxY));
-}
 
 function useIsMobile(maxWidth = 759) {
   const [mobile, setMobile] = useState(() =>
@@ -217,28 +169,9 @@ export default function HeroName({ text }) {
   const glowId = `name-glow-${uid}`;
   const words = text.trim().split(/\s+/);
   const letterCount = words.reduce((n, w) => n + w.length, 0);
-  const scrolledRef = useRef(false);
   const rootRef = useRef(null);
   const [active, setActive] = useState(true);
   const stacked = mobile && words.length > 1;
-
-  useEffect(() => {
-    if (reduced || scrolledRef.current) return undefined;
-    let cancelScroll = () => {};
-
-    const id = window.setTimeout(() => {
-      if (scrolledRef.current) return;
-      scrolledRef.current = true;
-      const target = document.getElementById('manifeste');
-      if (!target) return;
-      cancelScroll = smoothScrollTo(sectionEntryY(target), SCROLL_DOWN_MS);
-    }, HERO_HOLD_MS);
-
-    return () => {
-      window.clearTimeout(id);
-      cancelScroll();
-    };
-  }, [reduced]);
 
   useEffect(() => {
     const el = rootRef.current;

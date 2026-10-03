@@ -1,3 +1,4 @@
+import { handleHashLinkClick } from '../bits/smoothScroll';
 import { a11y, contacts, footer, identity } from '../content';
 
 function ExternalHint() {
@@ -13,7 +14,11 @@ function FooterLink({ link }) {
       </a>
     );
   }
-  return <a href={link.href}>{link.label}</a>;
+  return (
+    <a href={link.href} onClick={(e) => handleHashLinkClick(e, link.href)}>
+      {link.label}
+    </a>
+  );
 }
 
 function DossierPoem({ title, links }) {
@@ -61,7 +66,11 @@ export default function Footer({ preference, setPreference, resolved }) {
     <footer className="site-footer">
       <div className="shell">
         <div className="site-footer__mobile">
-          <a href="#accueil" className="wordmark site-footer__mobile-brand">
+          <a
+            href="#accueil"
+            className="wordmark site-footer__mobile-brand"
+            onClick={(e) => handleHashLinkClick(e, '#accueil')}
+          >
             {identity.wordmark}
           </a>
           <nav className="site-footer__mobile-nav" aria-label="Pied de page">
@@ -106,7 +115,11 @@ export default function Footer({ preference, setPreference, resolved }) {
 
         <div className="site-footer__desktop">
           <div className="site-footer__brand">
-            <a href="#accueil" className="wordmark">
+            <a
+              href="#accueil"
+              className="wordmark"
+              onClick={(e) => handleHashLinkClick(e, '#accueil')}
+            >
               {identity.wordmark}
             </a>
           </div>

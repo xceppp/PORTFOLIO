@@ -2,8 +2,13 @@ import { useEffect, useState } from 'react';
 import DecodeCycle from '../bits/DecodeCycle';
 import HeroName from '../bits/HeroName';
 import MetalCta from '../bits/MetalCta';
+import { handleHashLinkClick, smoothScrollTo } from '../bits/smoothScroll';
 import { usePrefersReducedMotion } from '../hooks/useTheme';
 import { hero } from '../content';
+
+function scrollToManifeste() {
+  smoothScrollTo('manifeste');
+}
 
 export default function Hero() {
   const reduced = usePrefersReducedMotion();
@@ -37,11 +42,34 @@ export default function Hero() {
 
         <div className="hero__actions">
           <MetalCta label={hero.ctaPrimary} href={hero.ctaPrimaryHref} />
-          <a className="text-link" href={hero.ctaSecondaryHref}>
+          <a
+            className="text-link"
+            href={hero.ctaSecondaryHref}
+            onClick={(e) => handleHashLinkClick(e, hero.ctaSecondaryHref)}
+          >
             {hero.ctaSecondary}
           </a>
         </div>
       </div>
+
+      <button
+        type="button"
+        className="hero__skip"
+        aria-label="Descendre vers le manifeste"
+        onClick={scrollToManifeste}
+      >
+        <span className="hero__skip-chevron" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path
+              d="M6.5 9.5 12 15l5.5-5.5"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </span>
+      </button>
     </section>
   );
 }

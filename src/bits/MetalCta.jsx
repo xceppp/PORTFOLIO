@@ -1,4 +1,5 @@
 import { lazy, Suspense } from 'react';
+import { smoothScrollTo } from './smoothScroll';
 import { usePrefersReducedMotion, useTheme } from '../hooks/useTheme';
 
 const LiquidMetalButton = lazy(() =>
@@ -13,9 +14,16 @@ function activateTarget(href, onClick) {
   if (!href) return;
   if (href.startsWith('#')) {
     const id = href.slice(1);
-    const el = document.getElementById(id);
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    else window.location.hash = href;
+    if (document.getElementById(id)) {
+      smoothScrollTo(id);
+      try {
+        history.pushState(null, '', href);
+      } catch {
+        /* ignore */
+      }
+    } else {
+      window.location.hash = href;
+    }
     return;
   }
   if (href.startsWith('mailto:') || href.startsWith('tel:')) {
@@ -43,7 +51,17 @@ export default function MetalCta({
   if (reduced) {
     if (href) {
       return (
-        <a className={`btn btn--primary ${className}`.trim()} href={href} aria-label={ariaLabel || text}>
+        <a
+          className={`btn btn--primary ${className}`.trim()}
+          href={href}
+          aria-label={ariaLabel || text}
+          onClick={(e) => {
+            if (href.startsWith('#')) {
+              e.preventDefault();
+              activateTarget(href);
+            }
+          }}
+        >
           {label}
         </a>
       );

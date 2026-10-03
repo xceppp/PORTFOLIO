@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { handleHashLinkClick } from '../bits/smoothScroll';
 import { AnimatedTopDock } from '../threeui/animated-top-dock/AnimatedTopDock';
 import { a11y, contacts, identity, nav } from '../content';
 import '../threeui/threeui.css';
@@ -201,7 +202,11 @@ export default function Nav({ preference, setPreference, resolved }) {
         </div>
 
         <div className="site-nav__mobile-bar">
-          <a href="#accueil" className="site-nav__mobile-brand wordmark">
+          <a
+            href="#accueil"
+            className="site-nav__mobile-brand wordmark"
+            onClick={(e) => handleHashLinkClick(e, '#accueil')}
+          >
             {identity.wordmark}
           </a>
           <div className="site-nav__mobile-actions">
@@ -247,7 +252,13 @@ export default function Nav({ preference, setPreference, resolved }) {
           <ul className="mobile-menu__links">
             {nav.links.map((link) => (
               <li key={link.href}>
-                <a href={link.href} onClick={() => setMobileOpen(false)}>
+                <a
+                  href={link.href}
+                  onClick={(e) => {
+                    handleHashLinkClick(e, link.href);
+                    setMobileOpen(false);
+                  }}
+                >
                   {link.label}
                 </a>
               </li>

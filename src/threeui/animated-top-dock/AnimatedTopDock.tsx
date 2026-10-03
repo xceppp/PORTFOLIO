@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { smoothScrollTo } from "../../bits/smoothScroll";
 import { createTopDockController, type TopDockOptions } from "./topDockController";
 
 export const ANIMATED_TOP_DOCK_VARIANTS = ["sable", "modern", "retro", "glass"] as const;
@@ -272,9 +273,21 @@ export function AnimatedTopDock({
     setActive(item.id);
     onItemSelect?.(item.id, item);
     if (item.href) {
-      const target = document.querySelector(item.href);
-      if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
-      else window.location.hash = item.href;
+      if (item.href.startsWith("#")) {
+        const id = item.href.slice(1);
+        if (document.getElementById(id)) {
+          smoothScrollTo(id);
+          try {
+            history.pushState(null, "", item.href);
+          } catch {
+            /* ignore */
+          }
+        } else {
+          window.location.hash = item.href;
+        }
+      } else {
+        window.location.assign(item.href);
+      }
     }
   };
 
@@ -301,18 +314,25 @@ export function AnimatedTopDock({
         <div className="atd-modern__aurora" aria-hidden="true" />
         <header className="atd-modern__bar">
           <a
-            className="atd-modern__brand"
+            className="atd-modern__brand atd-modern__brand--text"
             href={brandHref}
             onClick={(event) => {
               if (brandHref.startsWith("#")) {
                 event.preventDefault();
-                const target = document.querySelector(brandHref);
-                if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
-                else window.location.hash = brandHref;
+                const id = brandHref.slice(1);
+                if (document.getElementById(id)) {
+                  smoothScrollTo(id);
+                  try {
+                    history.pushState(null, "", brandHref);
+                  } catch {
+                    /* ignore */
+                  }
+                } else {
+                  window.location.hash = brandHref;
+                }
               }
             }}
           >
-            <span className="atd-modern__mark" aria-hidden="true">{BRAND_MARK}</span>
             <span className="atd-modern__word">{word}</span>
           </a>
           <nav ref={rootRef} className="atd-modern__dock" aria-label="Primary" data-dock-state="idle" data-dock-max="0.00">
@@ -336,9 +356,17 @@ export function AnimatedTopDock({
                 onClick={(event) => {
                   if (ctaHref.startsWith("#")) {
                     event.preventDefault();
-                    const target = document.querySelector(ctaHref);
-                    if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
-                    else window.location.hash = ctaHref;
+                    const id = ctaHref.slice(1);
+                    if (document.getElementById(id)) {
+                      smoothScrollTo(id);
+                      try {
+                        history.pushState(null, "", ctaHref);
+                      } catch {
+                        /* ignore */
+                      }
+                    } else {
+                      window.location.hash = ctaHref;
+                    }
                   }
                   onCtaClick?.();
                 }}

@@ -1,3 +1,4 @@
+import { handleHashLinkClick } from './bits/smoothScroll';
 import { useTheme } from './hooks/useTheme';
 import { a11y } from './content';
 import EntryBand from './sections/EntryBand';
@@ -21,12 +22,17 @@ export default function App() {
 
   return (
     <div className="site-shell">
-      <a className="skip-link" href="#contenu">
+      <a
+        className="skip-link"
+        href="#contenu"
+        onClick={(e) => handleHashLinkClick(e, '#contenu')}
+      >
         {a11y.skip}
       </a>
+      {/* Nav outside EntryBand so position:fixed is viewport-relative on mobile */}
+      <Nav preference={preference} setPreference={setPreference} resolved={resolved} />
       <main id="contenu">
         <EntryBand>
-          <Nav preference={preference} setPreference={setPreference} resolved={resolved} />
           <Hero />
           <AnnouncementBar />
         </EntryBand>
